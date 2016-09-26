@@ -27,6 +27,17 @@ namespace ExtendedSystem
 				return null;
 		}
 
+		public static Result<int, Exception> FromHResult(int hResult)
+		{
+			if ((hResult & 0x80000000) != 0)
+			{
+				var e = System.Runtime.InteropServices.Marshal.GetExceptionForHR(hResult);
+				return Result<int, Exception>.FromException(e);
+			}
+			else
+				return hResult;
+		}
+
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
 		public static Result<T, Exception> TryInvoke<T>(this Func<T> func)
 		{

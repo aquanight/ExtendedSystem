@@ -57,6 +57,12 @@
     <Compile Include="ResultTests.cs" />
     <Compile Include="UtilityTests.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ExtendedSystem\ExtendedSystem.csproj">
+      <Project>{c455f43a-8f3d-418c-99f7-0706e7464354}</Project>
+      <Name>ExtendedSystem</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
