@@ -756,6 +756,8 @@ namespace ExtendedSystem
 		/// at compile time, you would receive an ArrayTypeMismatchException at runtime because the array's real type is string[,] and as such it can only
 		/// hold string objects.
 		/// Even if the new element type is the same type as the old, the array is changed to be a new copy of the array.
+		/// If the original array was a vector, the new array is still a vector. Otherwise the new array has the same ranks, lower bounds, and lengths as
+		/// the original.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="array"></param>
@@ -773,14 +775,11 @@ namespace ExtendedSystem
 				throw new InvalidCastException("The new element type is not assignable to the static array type");
 			Type ret = array.GetType().GetElementType();
 			Array srcAry = (Array)(object)(array);
-			int[] lbds = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLowerBound(r)).ToArray();
-			int[] lens = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLength(r)).ToArray();
 			Array dstAry;
 			if (ret.Equals(newElementType))
 				dstAry = srcAry.Duplicate();
 			else
 			{
-				dstAry = Array.CreateInstance(newElementType, lens, lbds);
 				if (ret.IsAssignableFrom(newElementType))
 				{
 					// Type check of existing elements is required.
@@ -792,8 +791,21 @@ namespace ExtendedSystem
 				}
 				else if (!newElementType.IsAssignableFrom(ret))
 					throw new ArrayTypeMismatchException("No assignability relation exists between the runtime element type and the new element type");
-				ConstrainedCopy(srcAry, lbds, dstAry, lbds, lens); // ConstrainedCopy handles all the type-checking.
+				if (typeof(IList<T>).GetGenericTypeDefinition().MakeGenericType(et).IsAssignableFrom(typeof(T))) // Wish I could just typeof(IList`1) like in powershell...
+				{
+					// The array type is a vector.
+					dstAry = Array.CreateInstance(newElementType, srcAry.Length);
+					Array.ConstrainedCopy(srcAry, 0, dstAry, 0, dstAry.Length);
+				}
+				else
+				{
+					int[] lbds = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLowerBound(r)).ToArray();
+					int[] lens = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLength(r)).ToArray();
+					dstAry = Array.CreateInstance(newElementType, lens, lbds);
+					ConstrainedCopy(srcAry, lbds, dstAry, lbds, lens); // ConstrainedCopy handles all the type-checking.
+				}
 			}
+			array = (T)(object)dstAry;
 		}
 	}
 }

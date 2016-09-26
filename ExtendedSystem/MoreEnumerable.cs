@@ -106,6 +106,7 @@ namespace ExtendedSystem
 
 		/// <summary>
 		/// Fills an array with a specific value. Like Clear, but you can specify what it fills with instead of the default value.
+		/// Note: probably not as efficient as Clear which can, in many implementations, simply zero-fill the array (after dealing with GC).
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="array"></param>
