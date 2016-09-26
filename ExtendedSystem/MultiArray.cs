@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ExtendedSystem
 {
 	/// <summary>
-	/// Provides various methods to improve support of multi-dimensional arrays, but not non-zero based arrays.
+	/// Provides various methods to improve support of multi-dimensional arrays, and to some extent, non-zero based arrays.
 	/// Type-safe and more efficient overloads of each method are provided for 2-dimensional and 3-dimensional arrays.
 	/// Anything that enumerates through an array or portion of an array does so in "row major" order. For example:
 	/// For a 2-dimensional array of 4 by 6, the 6 elements of the first row are searched, then the 6 of the second, and so on to the fourth.
