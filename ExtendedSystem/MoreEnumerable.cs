@@ -370,5 +370,12 @@ namespace ExtendedSystem
 			items.CopyTo(newary, array.Length);
 			return newary;
 		}
+
+		// List and some other collections very often provide members like these, we will provide them for all ICollections:
+		public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> range)
+		{
+			foreach (var i in range)
+				collection.Add(i);
+		}
 	}
 }

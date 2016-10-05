@@ -16,6 +16,25 @@ namespace ExtendedSystem
 	public static class MultiArray
 	{
 		/// <summary>
+		/// Check if all supplied array types are of the same rank, including the distinction between SZARRAY and an MDARRAY of rank 1.
+		/// </summary>
+		/// <param name="arrayTypes"></param>
+		/// <returns></returns>
+		public static bool IsSameRank(Type type1, Type type2)
+		{
+			if (!type1.IsArray)
+				return !type2.IsArray;
+			if (type1.GetArrayRank() != type2.GetArrayRank())
+				return false;
+			return Reflect.gtd_ienum.MakeGenericType(type1.GetElementType()).IsAssignableFrom(type1) == Reflect.gtd_ienum.MakeGenericType(type2.GetElementType()).IsAssignableFrom(type2);
+		}
+
+		public static bool IsSZArray(Type arrayType)
+		{
+			return arrayType.IsArray && arrayType.GetArrayRank() == 1 && Reflect.gtd_ienum.MakeGenericType(arrayType.GetElementType()).IsAssignableFrom(arrayType);
+		}
+
+		/// <summary>
 		/// Checks that the specified positions are within the array's specified bounds.
 		/// Throws an exception if it is not.
 		/// Throws an exception if either is null, or if the position is not correct length for the array's rank.
