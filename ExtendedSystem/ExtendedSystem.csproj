@@ -52,6 +52,7 @@
     <Compile Include="Multibimap.cs" />
     <Compile Include="Multimap.cs" />
     <Compile Include="MutatingEnumerators.cs" />
+    <Compile Include="NetworkBitConverter.cs" />
     <Compile Include="PriorityQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflect.cs" />
