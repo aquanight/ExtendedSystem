@@ -93,6 +93,7 @@ namespace ExtendedSystem
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "h")]
+		[System.Security.SecurityCritical()]
 		public static Result<int, Exception> FromHResult(int hResult)
 		{
 			if ((hResult & 0x80000000) != 0)

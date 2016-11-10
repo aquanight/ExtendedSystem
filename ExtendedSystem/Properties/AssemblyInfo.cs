@@ -36,3 +36,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 [assembly: CLSCompliant(true)]
+
+[assembly: System.Security.SecurityRules(System.Security.SecurityRuleSet.Level2, SkipVerificationInFullTrust = false)]
+[assembly: System.Security.AllowPartiallyTrustedCallers()]
