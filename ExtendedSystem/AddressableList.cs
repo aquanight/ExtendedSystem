@@ -9,11 +9,18 @@ using System.Threading.Tasks;
 
 namespace ExtendedSystem
 {
+	public delegate void RefAction<T>(ref T value);
+
+	public delegate TReturn RefFunc<T, out TReturn>(ref T value);
+
+	public delegate bool RefPredicate<T>(ref T value);
+
 	/// <summary>
 	/// Similar to List&lt;T&gt; except that it has mechanisms to acquire references to the elements of the list (rather than copies of them). In the case of
 	/// value types, this allows the contents of those types to be modified in-place.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
 	public sealed class AddressableList<T> : IList<T>
 	{
 		private T[] data;
@@ -31,12 +38,6 @@ namespace ExtendedSystem
 		/// Delegate which takes a reference to the array elements.
 		/// </summary>
 		/// <param name="value"></param>
-		public delegate void RefAction(ref T value);
-
-		public delegate TReturn RefFunc<out TReturn>(ref T value);
-
-		public delegate bool RefPredicate(ref T value);
-
 		public AddressableList() : this(0)
 		{
 		}
@@ -101,7 +102,7 @@ namespace ExtendedSystem
 			if (newCapacity < used)
 				throw new ArgumentOutOfRangeException(nameof(newCapacity));
 			if (!TryEnterResize())
-				throw new InvalidOperationException("Cannot modify Capacity while there is an active element reference (GetRef method call).");
+				throw new InvalidOperationException("Cannot modify Capacity while there is an active element reference.");
 			try
 			{
 				T[] newData = (newCapacity == 0 ? Array.Empty<T>() : new T[newCapacity]);
@@ -139,7 +140,7 @@ namespace ExtendedSystem
 		/// </summary>
 		/// <param name="index"></param>
 		/// <param name="action"></param>
-		public void GetRef(int index, RefAction action)
+		public void GetRef(int index, RefAction<T> action)
 		{
 			if (index < 0 || index >= used)
 				throw new ArgumentOutOfRangeException(nameof(index));
@@ -172,7 +173,7 @@ namespace ExtendedSystem
 		/// <param name="index"></param>
 		/// <param name="func"></param>
 		/// <returns></returns>
-		public TResult GetRef<TResult>(int index, RefFunc<TResult> func)
+		public TResult GetRef<TResult>(int index, RefFunc<T, TResult> func)
 		{
 			if (index < 0 || index >= used)
 				throw new ArgumentOutOfRangeException(nameof(index));
@@ -260,7 +261,7 @@ namespace ExtendedSystem
 				throw new ArgumentException("Specified range is invalid");
 			if (comparer == null)
 				comparer = Comparer<T>.Default;
-			return Array.BinarySearch<T>(data, index, count, item, comparer);
+			return Array.BinarySearch(data, index, count, item, comparer);
 		}
 
 		public void Clear()
@@ -290,6 +291,8 @@ namespace ExtendedSystem
 
 		public AddressableList<TOutput> ConvertAll<TOutput>(Converter<T, TOutput> converter)
 		{
+			if (converter == null)
+				throw new ArgumentNullException(nameof(converter));
 			AddressableList<TOutput> output = new AddressableList<TOutput>(Capacity);
 			output.used = this.used;
 			for (int i = 0; i < used; ++i)
@@ -335,7 +338,7 @@ namespace ExtendedSystem
 			return false;
 		}
 
-		public bool Exists(RefFunc<bool> predicate)
+		public bool Exists(RefFunc<T, bool> predicate)
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
@@ -405,17 +408,17 @@ namespace ExtendedSystem
 			return -1;
 		}
 
-		public int FindIndex(RefFunc<bool> predicate)
+		public int FindIndex(RefFunc<T, bool> predicate)
 		{
 			return FindIndex(0, used, predicate);
 		}
 
-		public int FindIndex(int index, RefFunc<bool> predicate)
+		public int FindIndex(int index, RefFunc<T, bool> predicate)
 		{
 			return FindIndex(index, used - index, predicate);
 		}
 
-		public int FindIndex(int index, int count, RefFunc<bool> predicate)
+		public int FindIndex(int index, int count, RefFunc<T, bool> predicate)
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
@@ -480,17 +483,17 @@ namespace ExtendedSystem
 			return -1;
 		}
 
-		public int FindLastIndex(RefFunc<bool> predicate)
+		public int FindLastIndex(RefFunc<T, bool> predicate)
 		{
 			return FindLastIndex(0, used, predicate);
 		}
 
-		public int FindLastIndex(int index, RefFunc<bool> predicate)
+		public int FindLastIndex(int index, RefFunc<T, bool> predicate)
 		{
 			return FindLastIndex(index, used - index, predicate);
 		}
 
-		public int FindLastIndex(int index, int count, RefFunc<bool> predicate)
+		public int FindLastIndex(int index, int count, RefFunc<T, bool> predicate)
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
@@ -519,14 +522,27 @@ namespace ExtendedSystem
 
 		public void ForEach(Action<T> action)
 		{
+			if (action == null)
+				throw new ArgumentNullException(nameof(action));
 			for (int i = 0; i < used; ++i)
 				action(data[i]);
 		}
 
-		public void ForEach(RefAction action)
+		public void ForEach(RefAction<T> action)
 		{
-			for (int i = 0; i < used; ++i)
-				action(ref data[i]);
+			if (action == null)
+				throw new ArgumentNullException(nameof(action));
+			if (!TryEnterReference())
+				throw new InvalidOperationException("Cannot get reference during a resize operation.");
+			try
+			{
+				for (int i = 0; i < used; ++i)
+					action(ref data[i]);
+			}
+			finally
+			{
+				ExitReference();
+			}
 		}
 
 		public IEnumerator<T> GetEnumerator()
@@ -681,6 +697,8 @@ namespace ExtendedSystem
 
 		public void RemoveAll(Predicate<T> predicate)
 		{
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
 			if (!TryEnterResize())
 				throw new InvalidOperationException("Cannot remove items while an element is referenced.");
 			try
@@ -711,8 +729,10 @@ namespace ExtendedSystem
 		/// 
 		/// </summary>
 		/// <param name="predicate"></param>
-		public void RemoveAll(RefFunc<bool> predicate)
+		public void RemoveAll(RefFunc<T, bool> predicate)
 		{
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
 			// We take the resize lock, however, we're also acquiring references. However, we do so as part of our moving about.
 			if (!TryEnterResize())
 				throw new InvalidOperationException("Cannot remove items while an element is referenced.");
@@ -841,14 +861,18 @@ namespace ExtendedSystem
 
 		public bool TrueForAll(Predicate<T> predicate)
 		{
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
 			for (int i = 0; i < used; ++i)
 				if (!predicate(data[i]))
 					return false;
 			return true;
 		}
 
-		public bool TrueForAll(RefFunc<bool> predicate)
+		public bool TrueForAll(RefFunc<T, bool> predicate)
 		{
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
 			if (!TryEnterReference())
 				throw new InvalidOperationException("Cannot acquire reference while a resize is in progress.");
 			try

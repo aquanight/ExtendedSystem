@@ -201,7 +201,7 @@ namespace ExtendedSystem
 		public static bool None<T>(this IEnumerable<T> enumerable)
 		{
 			if (enumerable == null)
-				throw new ArgumentNullException("enumerable");
+				throw new ArgumentNullException(nameof(enumerable));
 			using (var e = enumerable.GetEnumerator())
 				return !e.MoveNext();
 		}
@@ -216,7 +216,9 @@ namespace ExtendedSystem
 		public static bool None<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
 		{
 			if (enumerable == null)
-				throw new ArgumentNullException("enumerable");
+				throw new ArgumentNullException(nameof(enumerable));
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
 			using (var e = enumerable.GetEnumerator())
 				while (e.MoveNext())
 					if (predicate(e.Current))
@@ -236,9 +238,11 @@ namespace ExtendedSystem
 		public static IEnumerable<TElement> AnyOrThrow<TElement, TException>(this IEnumerable<TElement> enumerable, Func<TElement, bool> predicate, Lazy<TException> exception) where TException : Exception
 		{
 			if (enumerable == null)
-				throw new ArgumentNullException("enumerable");
+				throw new ArgumentNullException(nameof(enumerable));
 			if (exception == null)
-				throw new ArgumentNullException("exception");
+				throw new ArgumentNullException(nameof(exception));
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
 			using (var e = enumerable.GetEnumerator())
 				while (e.MoveNext())
 					if (predicate(e.Current))
@@ -331,7 +335,7 @@ namespace ExtendedSystem
 		public static T GetFromHash<T>(this IList<T> list, int hashCode)
 		{
 			if (list == null)
-				throw new ArgumentNullException("array");
+				throw new ArgumentNullException(nameof(list));
 			int ix = hashCode % list.Count;
 			if (ix < 0)
 				ix += list.Count;
@@ -348,7 +352,7 @@ namespace ExtendedSystem
 		public static void SetFromHash<T>(this IList<T> list, int hashCode, T value)
 		{
 			if (list == null)
-				throw new ArgumentNullException("array");
+				throw new ArgumentNullException(nameof(list));
 			int ix = hashCode % list.Count;
 			if (ix < 0)
 				ix += list.Count;
@@ -357,6 +361,8 @@ namespace ExtendedSystem
 
 		public static T[] Append<T>(this T[] array, T item)
 		{
+			if (array == null)
+				throw new ArgumentNullException(nameof(array));
 			T[] newary = new T[array.Length + 1];
 			array.CopyTo(newary, 0);
 			newary[array.Length] = item;
@@ -365,6 +371,10 @@ namespace ExtendedSystem
 
 		public static T[] Append<T>(this T[] array, ICollection<T> items)
 		{
+			if (array == null)
+				throw new ArgumentNullException(nameof(array));
+			if (items == null)
+				throw new ArgumentNullException(nameof(items));
 			T[] newary = new T[array.Length + items.Count];
 			array.CopyTo(newary, 0);
 			items.CopyTo(newary, array.Length);
@@ -374,8 +384,46 @@ namespace ExtendedSystem
 		// List and some other collections very often provide members like these, we will provide them for all ICollections:
 		public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> range)
 		{
+			if (collection == null)
+				throw new ArgumentNullException(nameof(collection));
+			if (range == null)
+				throw new ArgumentNullException(nameof(range));
 			foreach (var i in range)
 				collection.Add(i);
+		}
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+		public static IEnumerable<Result<TResult, Exception>> TrySelect<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			if (selector == null)
+				throw new ArgumentNullException(nameof(selector));
+			Func<Func<TSource, TResult>, TSource, Result<TResult, Exception>> _dlg = Utility.TryInvoke;
+			Func<TSource, Result<TResult, Exception>> sel = _dlg.BindFirst(selector);
+			return Enumerable.Select(source, sel);
+		}
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+		public static IEnumerable<TValue> Successful<TValue, TException>(this IEnumerable<IResult<TValue, TException>> source) where TException : Exception
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			return source.Where((r) => r.Success).Select((r) => r.Assert());
+		}
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+		public static IEnumerable<TValue> AssertAll<TValue, TException>(this IEnumerable<IResult<TValue, TException>> source) where TException : Exception
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			if (!source.All((r) => r.Success))
+			{
+				TException[] e = source.Where((r) => !r.Success).Select((r) => r.GetException()).ToArray();
+				AggregateException ae = new AggregateException(e);
+				throw ae;
+			}
+			return source.Select((r) => r.Assert());
 		}
 	}
 }

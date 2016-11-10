@@ -2,12 +2,25 @@
 
 namespace ExtendedSystem
 {
+	public interface IResult<out TValue, out TException> where TException : Exception
+	{
+		bool Success
+		{
+			get;
+		}
+
+		TValue Assert();
+
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
+		TException GetException();
+	}
+
 	/// <summary>
 	/// Encloses the result of a function call. Picture it as an object extension of HRESULT.
 	/// </summary>
 	/// <typeparam name="TValue"></typeparam>
 	/// <typeparam name="TException"></typeparam>
-	public class Result<TValue, TException> where TException : Exception
+	public class Result<TValue, TException> : IResult<TValue, TException> where TException : Exception
 	{
 		public bool Success
 		{
@@ -44,6 +57,11 @@ namespace ExtendedSystem
 				return value;
 			else
 				throw exception;
+		}
+
+		public TException GetException()
+		{
+			return exception;
 		}
 
 		public bool TryGet(out TValue result)

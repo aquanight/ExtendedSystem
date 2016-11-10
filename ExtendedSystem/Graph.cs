@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace ExtendedSystem
 {
 
-	public class Graph<T> : ISet<T>, IEquatable<Graph<T>>
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
+	public sealed class Graph<T> : ISet<T>, IEquatable<Graph<T>>
 	{
 		private Dictionary<T, HashSet<T>> graph;
 
@@ -203,6 +204,8 @@ namespace ExtendedSystem
 
 		public void RemoveVertices(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			foreach (var e in other)
 			{
 				if (graph.ContainsKey(e))
@@ -222,6 +225,8 @@ namespace ExtendedSystem
 			return graph.Keys.GetEnumerator();
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
 		public IEnumerator<KeyValuePair<T, T>> GetEdgeEnumerator()
 		{
 			foreach (var kvp in graph)
@@ -235,6 +240,8 @@ namespace ExtendedSystem
 		/// <param name="other"></param>
 		public void IntersectWith(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			var rm = graph.Keys.Except(other, Comparer).ToArray();
 			foreach (var o in rm)
 			{
@@ -250,8 +257,10 @@ namespace ExtendedSystem
 		/// Following completion, this.IsSubgraphOf(other) will be true.
 		/// </summary>
 		/// <param name="other"></param>
-		public void IntersetGraphWith(Graph<T> other)
+		public void IntersectGraphWith(Graph<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			HashSet<T> keys = new HashSet<T>(graph.Keys, Comparer);
 			foreach (var kvp in other.graph)
 			{
@@ -271,6 +280,8 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsProperSubsetOf(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			bool isproper = false;
 			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => false, Comparer);
 			foreach (var o in other)
@@ -289,8 +300,11 @@ namespace ExtendedSystem
 		/// </summary>
 		/// <param name="other"></param>
 		/// <returns></returns>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Subgraph")]
 		public bool IsProperSubgraphOf(Graph<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			bool isproper = false;
 			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => false, Comparer);
 			foreach (var kvp in other.graph)
@@ -317,6 +331,8 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsProperSupersetOf(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => true, Comparer);
 			foreach (var o in other)
 			{
@@ -334,8 +350,11 @@ namespace ExtendedSystem
 		/// </summary>
 		/// <param name="other"></param>
 		/// <returns></returns>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Supergraph")]
 		public bool IsProperSupergraphOf(Graph<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => true, Comparer);
 			foreach (var kvp in other.graph)
 			{
@@ -361,6 +380,8 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsSubsetOf(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			HashSet<T> keys = new HashSet<T>(graph.Keys, Comparer);
 			foreach (var o in other)
 			{
@@ -375,8 +396,11 @@ namespace ExtendedSystem
 		/// </summary>
 		/// <param name="other"></param>
 		/// <returns></returns>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Subgraph")]
 		public bool IsSubgraphOf(Graph<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			return other.IsSupergraphOf(this);
 		}
 
@@ -390,6 +414,8 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsSupersetOf(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			foreach (var o in other)
 			{
 				if (!graph.ContainsKey(o))
@@ -404,8 +430,11 @@ namespace ExtendedSystem
 		/// </summary>
 		/// <param name="other"></param>
 		/// <returns></returns>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Supergraph")]
 		public bool IsSupergraphOf(Graph<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			foreach (var kvp in other.graph)
 			{
 				if (!graph.ContainsKey(kvp.Key) || !graph[kvp.Key].IsSupersetOf(kvp.Value))
@@ -422,11 +451,13 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Overlaps(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			return other.Any((o) => graph.ContainsKey(o));
 		}
 
 		/// <summary>
-		/// Removes the specified vertex from the graph. This also removes all edges.
+		/// Removes the specified vertex from the graph. This also removes all edges incident on that vertex.
 		/// </summary>
 		/// <param name="item"></param>
 		/// <returns></returns>
@@ -446,6 +477,8 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool SetEquals(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => false, Comparer);
 			foreach (var o in other)
 			{
@@ -464,6 +497,8 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Equals(Graph<T> other)
 		{
+			if (other == null)
+				return false;
 			HashSet<T> keys = new HashSet<T>(graph.Keys, Comparer);
 			foreach (var kvp in other.graph)
 			{
@@ -484,11 +519,10 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public override bool Equals(object obj)
 		{
-			if (obj == null)
+			Graph<T> g = obj as Graph<T>;
+			if (g == null)
 				return false;
-			if (!(obj is Graph<T>))
-				return false;
-			return Equals((Graph<T>)obj);
+			return Equals(g);
 		}
 
 		/// <summary>
@@ -511,10 +545,14 @@ namespace ExtendedSystem
 		/// <summary>
 		/// Removes all vertices from this graph that appear in other and adds the ones that don't.
 		/// Duplicate entries within other are ignored.
+		/// Vertices that are removed will also remove all edges incident on that vertex.
+		/// vertices added have no incident edges.
 		/// </summary>
 		/// <param name="other"></param>
 		public void SymmetricExceptWith(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			HashSet<T> toAdd = new HashSet<T>(Comparer);
 			HashSet<T> toRemove = new HashSet<T>(Comparer);
 			foreach (var o in other)
@@ -534,15 +572,20 @@ namespace ExtendedSystem
 		/// <param name="other"></param>
 		void ISet<T>.UnionWith(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			AddRange(other);
 		}
 
 		/// <summary>
 		/// Adds a collection of vertices to this graph. Duplicate vertices are ignored.
+		/// The new vertices have no incident edges.
 		/// </summary>
 		/// <param name="other"></param>
 		public void AddRange(IEnumerable<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			foreach (var o in other)
 				Add(o);
 		}
@@ -554,12 +597,14 @@ namespace ExtendedSystem
 		/// <param name="other"></param>
 		public void GraphUnionWith(Graph<T> other)
 		{
+			if (other == null)
+				throw new ArgumentNullException(nameof(other));
 			foreach (var kvp in other.graph)
 			{
 				if (Contains(kvp.Key))
 					graph[kvp.Key].UnionWith(kvp.Value);
 				else
-					graph.Add(kvp.Key, new HashSet<T>(kvp.Value, Comparer));
+					graph.Add(kvp.Key, new HashSet<T>(kvp.Value, Comparer)); // Why are we not checking for vertices we don't have? Because we're adding those too!
 			}
 		}
 
@@ -602,9 +647,10 @@ namespace ExtendedSystem
 
 		/// <summary>
 		/// Test if this graph is undirected or rather, that every edge has a matching reverse edge.
+		/// Vacuously true if there are no edges.
 		/// </summary>
 		/// <returns></returns>
-		public bool TestIsUndirected()
+		public bool IsUndirected()
 		{
 			foreach (var kvp in graph)
 				foreach (var v in kvp.Value)
@@ -615,9 +661,10 @@ namespace ExtendedSystem
 
 		/// <summary>
 		/// Tests if the graph is regular: every vertex has the same number of edges.
+		/// Vacuously true if there are no edges.
 		/// </summary>
 		/// <returns></returns>
-		public bool TestIsRegular()
+		public bool IsRegular()
 		{
 			return graph.Select((kvp) => kvp.Value.Count).Distinct().Count() == 1;
 		}
@@ -626,7 +673,7 @@ namespace ExtendedSystem
 		/// Tests if the graph is complete: every vertex is adjacent to every other vertex. Loops are not considered in the check.
 		/// </summary>
 		/// <returns></returns>
-		public bool TestIsComplete()
+		public bool IsComplete()
 		{
 			foreach (var kvp in graph)
 			{
@@ -637,22 +684,18 @@ namespace ExtendedSystem
 		}
 
 		/// <summary>
-		/// Creates a complete graph from the given set of vertices.
+		/// Fills in edges such that the current graph becomes complete.
+		/// Specifically, an edge is added from every vertex to every other vertex.
+		/// Any loops that existed in the graph before this operation are removed.
+		/// A complete graph yields true from TestIsComplete.
 		/// </summary>
-		/// <param name="vertices"></param>
-		/// <returns></returns>
-		public static Graph<T> CreateCompleteGraph(ISet<T> vertices)
+		public void MakeComplete()
 		{
-			Graph<T> graph = new Graph<T>();
-			foreach (var k in vertices)
+			foreach (var kvp in graph)
 			{
-				foreach (var k2 in graph.graph)
-				{
-					k2.Value.Add(k);
-				}
-				graph.graph.Add(k, new HashSet<T>(graph.graph.Keys));
+				kvp.Value.UnionWith(graph.Keys);
+				kvp.Value.Remove(kvp.Key);
 			}
-			return graph;
 		}
 	}
 }

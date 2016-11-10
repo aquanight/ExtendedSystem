@@ -28,7 +28,7 @@ namespace ExtendedSystem
 
 		public override object ChangeType(object value, Type type, CultureInfo culture)
 		{
-			throw new NotSupportedException("ChangeType is not needed I guess.");
+			throw new NotImplementedException();
 		}
 
 		public override void ReorderArgumentArray(ref object[] args, object state)

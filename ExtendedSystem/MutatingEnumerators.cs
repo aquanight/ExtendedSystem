@@ -23,7 +23,8 @@ namespace ExtendedSystem
 	/// combination is unspecified.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public class ListMutatingEnumerator<T> : IEnumerator<T>, IList<T>
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
+	public sealed class ListMutatingEnumerator<T> : IEnumerator<T>, IList<T>
 	{
 		private IList<T> _target;
 		private int _position;
@@ -85,7 +86,7 @@ namespace ExtendedSystem
 				if (_inbetween)
 					throw new InvalidOperationException("The current position is not valid.");
 				if (_position >= _target.Count)
-					throw new IndexOutOfRangeException("The enumerator has passed the collection end.");
+					throw new InvalidOperationException("The enumerator has passed the collection end.");
 				return Target[_position];
 			}
 			set
@@ -93,7 +94,7 @@ namespace ExtendedSystem
 				if (_inbetween)
 					throw new InvalidOperationException("The current position is not valid.");
 				if (_position >= _target.Count)
-					throw new IndexOutOfRangeException("The enumerator has passed the collection end.");
+					throw new InvalidOperationException("The enumerator has passed the collection end.");
 				Target[_position] = value;
 			}
 		}
@@ -146,7 +147,7 @@ namespace ExtendedSystem
 					--index;
 				index += _position;
 				if (index < 0 || index >= Target.Count)
-					throw new IndexOutOfRangeException("The index is outside the container's bounds.");
+					throw new InvalidOperationException("The index is outside the container's bounds.");
 				return _target[index];
 			}
 			set
@@ -157,7 +158,7 @@ namespace ExtendedSystem
 					--index;
 				index += _position;
 				if (index < 0 || index >= Target.Count)
-					throw new IndexOutOfRangeException("The index is outside the container's bounds.");
+					throw new InvalidOperationException("The index is outside the container's bounds.");
 				_target[index] = value;
 			}
 		}

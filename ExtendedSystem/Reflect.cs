@@ -276,6 +276,7 @@ namespace ExtendedSystem
 		// If this is not done then it is possible you will just get null.
 		// If deduction can be completed in absense of generic type constraints, but the deduced arguments cannot satisfy those constraints,
 		// null is returned.
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
 		public static MethodInfo InferGenericMethod(this MethodInfo genericMethod, Type[] argTypes)
 		{
 			if (genericMethod == null)

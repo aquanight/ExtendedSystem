@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace ExtendedSystem
 	/// For a 2-dimensional array of 4 by 6, the 6 elements of the first row are searched, then the 6 of the second, and so on to the fourth.
 	/// For a 3-dimensional array of 2 by 8 by 3, there are two rows of 8 "subrows" of 3 items.
 	/// </summary>
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Multi")]
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 	public static class MultiArray
 	{
 		/// <summary>
@@ -22,6 +25,10 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public static bool IsSameRank(Type type1, Type type2)
 		{
+			if (type1 == null)
+				throw new ArgumentNullException(nameof(type1));
+			if (type2 == null)
+				throw new ArgumentNullException(nameof(type2));
 			if (!type1.IsArray)
 				return !type2.IsArray;
 			if (type1.GetArrayRank() != type2.GetArrayRank())
@@ -31,6 +38,8 @@ namespace ExtendedSystem
 
 		public static bool IsSZArray(Type arrayType)
 		{
+			if (arrayType == null)
+				throw new ArgumentNullException(nameof(arrayType));
 			return arrayType.IsArray && arrayType.GetArrayRank() == 1 && Reflect.gtd_ienum.MakeGenericType(arrayType.GetElementType()).IsAssignableFrom(arrayType);
 		}
 
@@ -45,40 +54,45 @@ namespace ExtendedSystem
 		public static void CheckBounds(Array array, int[] index)
 		{
 			if (array == null)
-				throw new ArgumentNullException("array");
+				throw new ArgumentNullException(nameof(array));
 			if (index == null)
-				throw new ArgumentNullException("position");
+				throw new ArgumentNullException(nameof(index));
 			if (array.Rank != index.Length)
 				throw new RankException();
 			for (int i = 0; i < index.Length; ++i)
 			{
 				if (index[i] < array.GetLowerBound(i))
-					throw new IndexOutOfRangeException();
+					throw new ArgumentOutOfRangeException(nameof(index) + "[" + i.ToString(CultureInfo.InvariantCulture) + "]");
 				if (index[i] > array.GetUpperBound(i))
-					throw new IndexOutOfRangeException();
+					throw new ArgumentOutOfRangeException(nameof(index) + "[" + i.ToString(CultureInfo.InvariantCulture) + "]");
 			}
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static void CheckBounds<T>(T[,] array, int row, int column)
 		{
 			if (array == null)
 				throw new ArgumentNullException(nameof(array));
 			if (row < array.GetLowerBound(0) || row > array.GetUpperBound(0))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(row));
 			if (column < array.GetLowerBound(1) || column > array.GetUpperBound(1))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(column));
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "z")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "y")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static void CheckBounds<T>(T[,,] array, int x, int y, int z)
 		{
 			if (array == null)
 				throw new ArgumentNullException(nameof(array));
 			if (x < array.GetLowerBound(0) || x > array.GetUpperBound(0))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(x));
 			if (y < array.GetLowerBound(1) || y > array.GetUpperBound(1))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(y));
 			if (z < array.GetLowerBound(2) || z > array.GetUpperBound(2))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(z));
 		}
 
 		/// <summary>
@@ -102,34 +116,42 @@ namespace ExtendedSystem
 			for (int i = 0; i < index.Length; ++i)
 			{
 				if (index[i] < array.GetLowerBound(i))
-					throw new IndexOutOfRangeException();
+					throw new ArgumentOutOfRangeException(nameof(index) + "[" + i.ToString(CultureInfo.InvariantCulture) + "]");
 				if (index[i] > array.GetUpperBound(i))
-					throw new IndexOutOfRangeException();
+					throw new ArgumentOutOfRangeException(nameof(index) + "[" + i.ToString(CultureInfo.InvariantCulture) + "]");
 				if (index[i] + length[i] - 1 > array.GetUpperBound(i))
-					throw new IndexOutOfRangeException();
+					throw new ArgumentOutOfRangeException(nameof(index) + "[" + i.ToString(CultureInfo.InvariantCulture) + "]");
 			}
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "num")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static void CheckBounds<T>(T[,] array, int row, int column, int numRows, int numColumns)
 		{
 			if (array == null)
 				throw new ArgumentNullException(nameof(array));
 			if (row < array.GetLowerBound(0) || row > array.GetUpperBound(0) || row + numRows - 1 > array.GetUpperBound(0))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(row));
 			if (column < array.GetLowerBound(1) || column > array.GetUpperBound(1) || column + numColumns - 1 > array.GetUpperBound(1))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(column));
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "z")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "y")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static void CheckBounds<T>(T[,,] array, int x, int y, int z, int dx, int dy, int dz)
 		{
 			if (array == null)
 				throw new ArgumentNullException(nameof(array));
 			if (x < array.GetLowerBound(0) || x > array.GetUpperBound(0) || x + dx - 1 > array.GetUpperBound(0))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(x));
 			if (y < array.GetLowerBound(1) || y > array.GetUpperBound(1) || y + dy - 1 > array.GetUpperBound(1))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(y));
 			if (z < array.GetLowerBound(2) || z > array.GetUpperBound(2) || z + dz - 1 > array.GetUpperBound(2))
-				throw new IndexOutOfRangeException();
+				throw new ArgumentOutOfRangeException(nameof(z));
 		}
 
 		private static int[] PositionAdd(int[] index, int[] offset)
@@ -159,7 +181,7 @@ namespace ExtendedSystem
 			for (int i = factors.Length - 1; i >= 0; --i)
 			{
 				if (length[i] < 0)
-					throw new IndexOutOfRangeException("negative length");
+					throw new ArgumentOutOfRangeException(nameof(length) + "[" + i.ToString() + "]");
 				factors[i] = factors[i + 1] * length[i];
 			}
 			for (int ix = 0; ix < factors[0]; ++ix)
@@ -182,19 +204,31 @@ namespace ExtendedSystem
 			return EnumeratePositions(pos, len);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "num")]
 		public static IEnumerable<int[]> EnumeratePositions(int row, int column, int numRows, int numColumns)
 		{
-			if (numRows < 0 || numColumns < 0)
-				throw new IndexOutOfRangeException("negative length");
+			if (numRows < 0)
+				throw new ArgumentOutOfRangeException(nameof(numRows));
+			if (numColumns < 0)
+				throw new ArgumentOutOfRangeException(nameof(numColumns));
 			for (int ri = 0; ri < numRows; ++ri)
 				for (int ci = 0; ci < numRows; ++ci)
 					yield return new int[] { row + ri, column + ci };
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "z")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "y")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dy")]
 		public static IEnumerable<int[]> EnumeratePositions(int x, int y, int z, int dx, int dy, int dz)
 		{
-			if (dx < 0 || dy < 0 || dz < 0)
-				throw new IndexOutOfRangeException("negative length");
+			if (dx < 0)
+				throw new ArgumentOutOfRangeException(nameof(dx));
+			if (dy < 0)
+				throw new ArgumentOutOfRangeException(nameof(dy));
+			if (dz < 0)
+				throw new ArgumentOutOfRangeException(nameof(dz));
 			for (int ix = 0; ix < dx; ++ix)
 				for (int iy = 0; iy < dy; ++iy)
 					for (int iz = 0; iz < dz; ++iz)
@@ -214,6 +248,8 @@ namespace ExtendedSystem
 				yield return array.GetValue(pos);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "num")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static IEnumerable<T> EnumerateRegion<T>(T[,] array, int row, int column, int numRows, int numColumns)
 		{
 			CheckBounds(array, row, column, numRows, numColumns);
@@ -222,6 +258,12 @@ namespace ExtendedSystem
 					yield return array[row + ri, column + ci];
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "z")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "y")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static IEnumerable<T> EnumerateRegion<T>(T[,,] array, int x, int y, int z, int dx, int dy, int dz)
 		{
 			CheckBounds(array, x, y, z, dx, dy, dz);
@@ -255,12 +297,17 @@ namespace ExtendedSystem
 			return pos + array.GetLowerBound(0);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static int GetVectorIndex<T>(T[,] array, int row, int column)
 		{
 			CheckBounds(array, row, column);
 			return ((row - array.GetLowerBound(0)) * array.GetLength(1)) + (column - array.GetLowerBound(1)) + array.GetLowerBound(0);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "z")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "y")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static int GetVectorIndex<T>(T[,,] array, int x, int y, int z)
 		{
 			CheckBounds(array, x, y, z);
@@ -286,6 +333,8 @@ namespace ExtendedSystem
 			}
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "num")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static void Clear<T>(T[,] array, int row, int column, int numRows, int numColumns)
 		{
 			CheckBounds(array, row, column, numRows, numColumns);
@@ -296,6 +345,12 @@ namespace ExtendedSystem
 			}
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "z")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "y")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static void Clear<T>(T[,,] array, int x, int y, int z, int dx, int dy, int dz)
 		{
 			CheckBounds(array, x, y, z, dx, dy, dz);
@@ -312,32 +367,32 @@ namespace ExtendedSystem
 		/// </summary>
 		/// <param name="sourceArray"></param>
 		/// <param name="sourceIndex"></param>
-		/// <param name="destArray"></param>
-		/// <param name="destIndex"></param>
+		/// <param name="destinationArray"></param>
+		/// <param name="destinationIndex"></param>
 		/// <param name="length"></param>
-		public static void ConstrainedCopy(Array sourceArray, int[] sourceIndex, Array destArray, int[] destIndex, int[] length)
+		public static void ConstrainedCopy(Array sourceArray, int[] sourceIndex, Array destinationArray, int[] destinationIndex, int[] length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException(nameof(sourceArray));
-			if (destArray == null)
-				throw new ArgumentNullException(nameof(destArray));
+			if (destinationArray == null)
+				throw new ArgumentNullException(nameof(destinationArray));
 			if (sourceIndex == null)
 				throw new ArgumentNullException(nameof(sourceIndex));
-			if (destIndex == null)
-				throw new ArgumentNullException(nameof(destIndex));
+			if (destinationIndex == null)
+				throw new ArgumentNullException(nameof(destinationIndex));
 			if (length == null)
 				throw new ArgumentNullException(nameof(length));
 			if (sourceArray.Rank != sourceIndex.Length)
 				throw new RankException();
 			if (sourceIndex.Rank != length.Length)
 				throw new RankException();
-			if (destArray.Rank != destIndex.Length)
+			if (destinationArray.Rank != destinationIndex.Length)
 				throw new RankException();
-			if (destArray.Rank != length.Length)
+			if (destinationArray.Rank != length.Length)
 				throw new RankException();
 			CheckBounds(sourceArray, sourceIndex, length);
-			CheckBounds(destArray, destIndex, length);
-			Array tmp = Array.CreateInstance(destArray.GetType().GetElementType(), length);
+			CheckBounds(destinationArray, destinationIndex, length);
+			Array tmp = Array.CreateInstance(destinationArray.GetType().GetElementType(), length);
 			int[] zero = new int[length.Length];
 			int[] fl = length.Duplicate();
 			int rl = length[length.Length - 1];
@@ -352,22 +407,26 @@ namespace ExtendedSystem
 			// Initial copy successful, transplant to target array.
 			foreach (var pos in EnumeratePositions(zero, fl))
 			{
-				int[] dstpos = PositionAdd(destIndex, pos);
+				int[] dstpos = PositionAdd(destinationIndex, pos);
 				int srcvix = GetVectorIndex(tmp, pos);
-				int dstvix = GetVectorIndex(destArray, dstpos);
-				Array.Copy(tmp, srcvix, destArray, dstvix, rl);
+				int dstvix = GetVectorIndex(destinationArray, dstpos);
+				Array.Copy(tmp, srcvix, destinationArray, dstvix, rl);
 			}
 		}
 
-		public static void ConstrainedCopy<T, U>(T[,] sourceArray, int sourceRow, int sourceColumn, U[,] destArray, int destRow, int destColumn, int numRows, int numColumns) where U : T
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "num")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "Body")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "3#")]
+		public static void ConstrainedCopy<TSource, TDestination>(TSource[,] sourceArray, int sourceRow, int sourceColumn, TDestination[,] destinationArray, int destinationRow, int destinationColumn, int numRows, int numColumns) where TDestination : TSource
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException(nameof(sourceArray));
-			if (destArray == null)
-				throw new ArgumentNullException(nameof(destArray));
+			if (destinationArray == null)
+				throw new ArgumentNullException(nameof(destinationArray));
 			CheckBounds(sourceArray, sourceRow, sourceColumn, numRows, numColumns);
-			CheckBounds(destArray, destRow, destColumn, numRows, numColumns);
-			U[,] tmp = new U[numRows, numColumns];
+			CheckBounds(destinationArray, destinationRow, destinationColumn, numRows, numColumns);
+			TDestination[,] tmp = new TDestination[numRows, numColumns];
 			for (int ir = 0; ir < numRows; ++ir)
 			{
 				int srcvix = GetVectorIndex(sourceArray, sourceRow + ir, sourceColumn);
@@ -378,20 +437,25 @@ namespace ExtendedSystem
 			for (int ir = 0; ir < numRows; ++ir)
 			{
 				int srcvix = GetVectorIndex(tmp, ir, 0);
-				int dstvix = GetVectorIndex(destArray, destRow + ir, destColumn);
-				Array.Copy(tmp, srcvix, destArray, dstvix, numColumns);
+				int dstvix = GetVectorIndex(destinationArray, destinationRow + ir, destinationColumn);
+				Array.Copy(tmp, srcvix, destinationArray, dstvix, numColumns);
 			}
 		}
 
-		public static void ConstrainedCopy<T, U>(T[,,] sourceArray, int sourceX, int sourceY, int sourceZ, U[,,] destArray, int destX, int destY, int destZ, int dx, int dy, int dz) where U : T
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "Body")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "4#")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
+		public static void ConstrainedCopy<TSource, TDestination>(TSource[,,] sourceArray, int sourceX, int sourceY, int sourceZ, TDestination[,,] destinationArray, int destinationX, int destinationY, int destinationZ, int dx, int dy, int dz) where TDestination : TSource
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException(nameof(sourceArray));
-			if (destArray == null)
-				throw new ArgumentNullException(nameof(destArray));
+			if (destinationArray == null)
+				throw new ArgumentNullException(nameof(destinationArray));
 			CheckBounds(sourceArray, sourceX, sourceY, sourceZ, dx, dy, dz);
-			CheckBounds(destArray, destX, destY, destZ, dx, dy, dz);
-			U[,,] tmp = new U[dx, dy, dz];
+			CheckBounds(destinationArray, destinationX, destinationY, destinationZ, dx, dy, dz);
+			TDestination[,,] tmp = new TDestination[dx, dy, dz];
 			for (int ix = 0; ix < dx; ++ix)
 				for (int iy = 0; iy < dy; ++iy)
 				{
@@ -404,8 +468,8 @@ namespace ExtendedSystem
 				for (int iy = 0; iy < dy; ++iy)
 				{
 					int srcvix = GetVectorIndex(tmp, ix, iy, 0);
-					int dstvix = GetVectorIndex(destArray, destX + ix, destY + iy, destZ);
-					Array.Copy(tmp, srcvix, destArray, dstvix, dz);
+					int dstvix = GetVectorIndex(destinationArray, destinationX + ix, destinationY + iy, destinationZ);
+					Array.Copy(tmp, srcvix, destinationArray, dstvix, dz);
 				}
 		}
 
@@ -417,6 +481,7 @@ namespace ExtendedSystem
 		/// <typeparam name="T"></typeparam>
 		/// <param name="rank"></param>
 		/// <returns></returns>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
 		public static Array Empty<T>(int rank)
 		{
 			if (rank < 1)
@@ -442,6 +507,7 @@ namespace ExtendedSystem
 			return array.OfType<T>().Any((e) => match(e));
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static bool Exists<T>(T[,] array, Predicate<T> match)
 		{
 			if (array == null)
@@ -455,6 +521,7 @@ namespace ExtendedSystem
 			return false;
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static bool Exists<T>(T[,,] array, Predicate<T> match)
 		{
 			if (array == null)
@@ -487,6 +554,7 @@ namespace ExtendedSystem
 			return array.OfType<T>().FirstOrDefault((e) => match(e));
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static T Find<T>(T[,] array, Predicate<T> match)
 		{
 			if (array == null)
@@ -500,6 +568,7 @@ namespace ExtendedSystem
 			return default(T);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "0#")]
 		public static T Find<T>(T[,,] array, Predicate<T> match)
 		{
 			if (array == null)
@@ -520,6 +589,7 @@ namespace ExtendedSystem
 		/// </summary>
 		/// <param name="array"></param>
 		/// <returns></returns>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Vectorize")]
 		public static Array Vectorize(Array array)
 		{
 			if (array == null)
@@ -694,6 +764,12 @@ namespace ExtendedSystem
 			array = newAry;
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dx")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Dx")]
 		public static void Resize<T>(ref T[,,] array, int newDx, int newDy, int newDz)
 		{
 			if (newDx < 0)
@@ -738,6 +814,12 @@ namespace ExtendedSystem
 			array = newAry;
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dx")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Dy")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Dz")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Dx")]
 		public static void Resize<T>(ref T[,,] array, int newDx, int newDy, int newDz, int newStartX, int newStartY, int newStartZ)
 		{
 			if (newDx < 0)

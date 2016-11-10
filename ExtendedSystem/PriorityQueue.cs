@@ -15,6 +15,8 @@ namespace ExtendedSystem
 	/// For nullable types T, null values may be added to the queue if and only if the selected comparer can handle them.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix")]
 	public sealed class PriorityQueue<T> : ICollection<T>, IEnumerable<T>, IReadOnlyCollection<T>, IOrderedEnumerable<T>
 	{
 		private LinkedList<T> entries;
