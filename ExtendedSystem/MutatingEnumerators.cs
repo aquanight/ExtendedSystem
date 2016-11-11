@@ -296,6 +296,27 @@ namespace ExtendedSystem
 		}
 
 		/// <summary>
+		/// Insert an item after the current position.
+		/// </summary>
+		/// <param name="item"></param>
+		public void InsertAfter(T item)
+		{
+			Insert(1, item);
+		}
+
+		/// <summary>
+		/// Insert an item at the current position. The item so inserted becomes the current item.
+		/// </summary>
+		/// <param name="item"></param>
+		public void InsertCurrent(T item)
+		{
+			if (_target == null)
+				throw new ObjectDisposedException("enumerator");
+			_target.Insert(_position, item);
+			_inbetween = false;
+		}
+
+		/// <summary>
 		/// Removes the item at the specified index. If an item is removed from before the current position, the position moves to continue pointing at the
 		/// current item. If the current position is removed (index is zero), the position becomes "inbetween" the previous item and the item now at the next
 		/// position: a MoveNext() must be called to advance to the item after the item just removed.
@@ -315,6 +336,14 @@ namespace ExtendedSystem
 				--_position;
 			else if (_position == index)
 				_inbetween = true;
+		}
+
+		/// <summary>
+		/// Removes the current item.
+		/// </summary>
+		public void RemoveCurrent()
+		{
+			RemoveAt(0);
 		}
 
 		/// <summary>
