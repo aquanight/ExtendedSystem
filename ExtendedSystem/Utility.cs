@@ -303,5 +303,44 @@ namespace ExtendedSystem
 			stopwatch.Restart();
 			return et;
 		}
+
+		/// <summary>
+		/// Extract the components of the indicated value: the mantissa, exponent, and sign.
+		/// Since the mantissa is 53 bits, a long value is required to represent it.
+		/// The mantissa always has bit 52 (0x0010000000000000L) set, except in the special cases described below:
+		/// Zero : mantissa and exponent = 0, negative = true if negative zero, false if not.
+		/// Infinity: mantissa = 0, exponent = 0x7FF, negative = true if Double.NegativeInfinity, false if PositiveInfinity
+		/// NaN : mantissa = NaN payload (including is_quiet in bit 51 (0x0008000000000000L)), exponent = 0x7FF, negative = unspecified
+		/// For all other values, the result is such that:
+		/// - mantissa has bit 52 (0x0010000000000000L) set, and no higher bits.
+		/// - the expression ((double)mantissa * Math.Pow(2, exponent) * (negative ? -1.0 : 1.0) == value) is true.
+		/// </summary>
+		/// <param name="value"></param>
+		public static void ExtractComponents(double value, out long mantissa, out int exponent, out bool negative)
+		{
+			long bits = BitConverter.DoubleToInt64Bits(value);
+			mantissa = (bits & 0x000FFFFFFFFFFFFFL);
+			exponent = (int)((bits & 0x7FF0000000000000L) >> 52);
+			negative = (bits & ~0x7FFFFFFFFFFFFFFFL) != 0;
+			if (exponent == 0x7FF)
+				return;
+			if (exponent == 0)
+			{
+				if (mantissa == 0) // Zero
+					return;
+				// Subnormal, represent as normal number.
+				exponent = -1022; // Starting exponent for the denormal numbers.
+				while ((mantissa & 0x0010000000000000L) == 0)
+				{
+					mantissa <<= 1;
+					--exponent;
+				}
+			}
+			else
+			{
+				exponent -= 1075; // 1023 + 52 bits to the right of the decimal
+				mantissa |= 0x0010000000000000L;
+			}
+		}
 	}
 }

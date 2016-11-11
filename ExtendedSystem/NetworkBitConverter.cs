@@ -8,7 +8,7 @@ namespace ExtendedSystem
 {
 	/// <summary>
 	/// BitConverter but always puts things in network byte order. Good for ensuring proper sharing of data between systems that may or may not be the same
-	/// architecture. An example might include sharing data between Windows systems (x86/amd64, little-endian) and Arduino (AVR32: little-endian).
+	/// architecture. An example might include sharing data between Windows systems (x86/amd64, little-endian) and Arduino (AVR32: big-endian).
 	/// Note that if BitConverter.IsLittleEndian is false, then the entirety of this class produces results identical to standard BitConverter.
 	/// The following functions are provided for interface-completeness but are functionally identical to the standard BitConverter versions:
 	/// GetBytes(bool)
