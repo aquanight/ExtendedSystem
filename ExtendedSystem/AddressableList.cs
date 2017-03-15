@@ -131,6 +131,12 @@ namespace ExtendedSystem
 			}
 		}
 
+		/// <summary>
+		/// Acquires a reference to a selected array element for use by the caller. The reference can only be guaranteed until the next call to Insert, InsertRange, Remove, RemoveRange, Clear, or
+		/// any assignment to the Capacity property, or any call to Add or AddRange that requires Capacity to change.
+		/// </summary>
+		/// <param name="index"></param>
+		/// <returns></returns>
 		[System.Security.SecuritySafeCritical()]
 		public ref T Address(int index)
 		{
