@@ -131,6 +131,14 @@ namespace ExtendedSystem
 			}
 		}
 
+		[System.Security.SecuritySafeCritical()]
+		public ref T Address(int index)
+		{
+			if (index < 0 || index >= this._data.Length)
+				throw new ArgumentOutOfRangeException(nameof(index));
+			return ref this._data[index];
+		}
+
 		/// <summary>
 		/// Calls action, passing an element of the list by reference. The called action can then modify fields or call methods against the actual stored
 		/// element, instead of retrieving a copy of it with the standard indexer.

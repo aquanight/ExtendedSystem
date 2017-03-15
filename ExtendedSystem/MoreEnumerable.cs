@@ -359,6 +359,17 @@ namespace ExtendedSystem
 			list[ix] = value;
 		}
 
+		[System.Security.SecuritySafeCritical()]
+		public static ref T AddressFromHash<T>(this T[] array, int hashCode)
+		{
+			if (array == null)
+				throw new ArgumentNullException(nameof(array));
+			int ix = hashCode % array.Length;
+			if (ix < 0)
+				ix += array.Length;
+			return ref array[ix];
+		}
+
 		public static T[] Append<T>(this T[] array, T item)
 		{
 			if (array == null)

@@ -9,6 +9,45 @@ namespace ExtendedSystem
 {
 	public static class Reflect
 	{
+		public static T GetValue<T>(this FieldInfo fieldInfo)
+		{
+			if (fieldInfo == null)
+				throw new ArgumentNullException(nameof(fieldInfo));
+			object val = fieldInfo.GetValue(null);
+			return (T)val;
+		}
+
+		public static T GetValue<T>(this FieldInfo fieldInfo, object instance)
+		{
+			if (fieldInfo == null)
+				throw new ArgumentNullException(nameof(fieldInfo));
+			object val = fieldInfo.GetValue(instance);
+			return (T)val;
+		}
+
+		public static T GetValueDirect<T, TObj>(this FieldInfo fieldInfo, ref TObj instance)
+		{
+			if (fieldInfo == null)
+				throw new ArgumentNullException(nameof(fieldInfo));
+			TypedReference tr = __makeref(instance);
+			object val = fieldInfo.GetValueDirect(tr);
+			return (T)val;
+		}
+
+		public static T CreateDelegate<T>(this MethodInfo methodInfo)
+		{
+			if (methodInfo == null)
+				throw new ArgumentNullException(nameof(methodInfo));
+			return (T)(object)methodInfo.CreateDelegate(typeof(T));
+		}
+
+		public static T CreateDelegate<T>(this MethodInfo methodInfo, object target)
+		{
+			if (methodInfo == null)
+				throw new ArgumentNullException(nameof(methodInfo));
+			return (T)(object)methodInfo.CreateDelegate(typeof(T), target);
+		}
+
 		internal static readonly Type _gtd_ienum = typeof(IEnumerable<>);
 		internal static readonly Type _gtd_ilist = typeof(IList<>);
 		internal static readonly Type _gtd_icoll = typeof(ICollection<>);
