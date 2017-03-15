@@ -31,8 +31,11 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(type2));
 			if (!type1.IsArray)
 				return !type2.IsArray;
-			if (type1.GetArrayRank() != type2.GetArrayRank())
+			int r;
+			if ((r = type1.GetArrayRank()) != type2.GetArrayRank())
 				return false;
+			if (r > 1)
+				return true; // Skip the SZARRAY interface check for > 1 rank.
 			return Reflect._gtd_ienum.MakeGenericType(type1.GetElementType()).IsAssignableFrom(type1) == Reflect._gtd_ienum.MakeGenericType(type2.GetElementType()).IsAssignableFrom(type2);
 		}
 
