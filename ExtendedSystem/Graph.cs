@@ -11,7 +11,7 @@ namespace ExtendedSystem
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
 	public sealed class Graph<T> : ISet<T>, IEquatable<Graph<T>>
 	{
-		private Dictionary<T, HashSet<T>> graph;
+		private Dictionary<T, HashSet<T>> _graph;
 
 		/// <summary>
 		/// Returns the IEqualityComparer employed in the graph, which dictates equatablity of the vertices, and hashing.
@@ -20,7 +20,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return graph.Comparer;
+				return this._graph.Comparer;
 			}
 		}
 
@@ -29,7 +29,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public Graph()
 		{
-			graph = new Dictionary<T, HashSet<T>>();
+			this._graph = new Dictionary<T, HashSet<T>>();
 		}
 
 		/// <summary>
@@ -37,7 +37,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public Graph(IEqualityComparer<T> comparer)
 		{
-			graph = new Dictionary<T, HashSet<T>>(comparer);
+			this._graph = new Dictionary<T, HashSet<T>>(comparer);
 		}
 
 		/// <summary>
@@ -45,7 +45,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public Graph(int capacity)
 		{
-			graph = new Dictionary<T, HashSet<T>>(capacity);
+			this._graph = new Dictionary<T, HashSet<T>>(capacity);
 		}
 
 		/// <summary>
@@ -53,7 +53,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public Graph(int capacity, IEqualityComparer<T> comparer)
 		{
-			graph = new Dictionary<T, HashSet<T>>(capacity, comparer);
+			this._graph = new Dictionary<T, HashSet<T>>(capacity, comparer);
 		}
 
 		/// <summary>
@@ -61,7 +61,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public Graph(ISet<T> vertices)
 		{
-			graph = new Dictionary<T, HashSet<T>>(vertices.ToDictionary((v) => v, (v) => new HashSet<T>()));
+			this._graph = new Dictionary<T, HashSet<T>>(vertices.ToDictionary((v) => v, (v) => new HashSet<T>()));
 		}
 
 		/// <summary>
@@ -69,7 +69,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public Graph(ISet<T> vertices, IEqualityComparer<T> comparer)
 		{
-			graph = new Dictionary<T, HashSet<T>>(vertices.ToDictionary((v) => v, (v) => new HashSet<T>()), comparer);
+			this._graph = new Dictionary<T, HashSet<T>>(vertices.ToDictionary((v) => v, (v) => new HashSet<T>()), comparer);
 		}
 
 		/// <summary>
@@ -79,7 +79,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return graph.Count;
+				return this._graph.Count;
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return graph.Sum((kvp) => kvp.Value.Count);
+				return this._graph.Sum((kvp) => kvp.Value.Count);
 			}
 		}
 
@@ -113,9 +113,9 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Add(T item)
 		{
-			if (graph.ContainsKey(item))
+			if (this._graph.ContainsKey(item))
 				return false;
-			graph.Add(item, new HashSet<T>(Comparer));
+			this._graph.Add(item, new HashSet<T>(this.Comparer));
 			return true;
 		}
 
@@ -124,9 +124,9 @@ namespace ExtendedSystem
 		/// </summary>
 		public void Clear()
 		{
-			foreach (var v in graph)
+			foreach (var v in this._graph)
 				v.Value.Clear();
-			graph.Clear();
+			this._graph.Clear();
 		}
 
 		/// <summary>
@@ -136,7 +136,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Contains(T item)
 		{
-			return graph.ContainsKey(item);
+			return this._graph.ContainsKey(item);
 		}
 
 		/// <summary>
@@ -148,7 +148,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsAdjacent(T from, T to)
 		{
-			return graph.ContainsKey(from) && graph[from].Contains(to);
+			return this._graph.ContainsKey(from) && this._graph[from].Contains(to);
 		}
 
 		/// <summary>
@@ -165,7 +165,7 @@ namespace ExtendedSystem
 		{
 			Add(from);
 			Add(to);
-			return graph[from].Add(to);
+			return this._graph[from].Add(to);
 		}
 
 		/// <summary>
@@ -180,7 +180,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool RemoveEdge(T from, T to)
 		{
-			return graph.ContainsKey(from) && graph[from].Remove(to);
+			return this._graph.ContainsKey(from) && this._graph[from].Remove(to);
 		}
 
 		/// <summary>
@@ -190,7 +190,7 @@ namespace ExtendedSystem
 		/// <param name="arrayIndex"></param>
 		public void CopyTo(T[] array, int arrayIndex)
 		{
-			graph.Keys.CopyTo(array, arrayIndex);
+			this._graph.Keys.CopyTo(array, arrayIndex);
 		}
 
 		/// <summary>
@@ -208,11 +208,11 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(other));
 			foreach (var e in other)
 			{
-				if (graph.ContainsKey(e))
-					graph[e].Clear();
-				graph.Remove(e);
+				if (this._graph.ContainsKey(e))
+					this._graph[e].Clear();
+				this._graph.Remove(e);
 			}
-			foreach (var h in graph.Values)
+			foreach (var h in this._graph.Values)
 				h.ExceptWith(other);
 		}
 
@@ -222,14 +222,14 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public IEnumerator<T> GetEnumerator()
 		{
-			return graph.Keys.GetEnumerator();
+			return this._graph.Keys.GetEnumerator();
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
 		public IEnumerator<KeyValuePair<T, T>> GetEdgeEnumerator()
 		{
-			foreach (var kvp in graph)
+			foreach (var kvp in this._graph)
 				foreach (var v in kvp.Value)
 					yield return new KeyValuePair<T, T>(kvp.Key, v);
 		}
@@ -242,13 +242,13 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			var rm = graph.Keys.Except(other, Comparer).ToArray();
+			var rm = this._graph.Keys.Except(other, this.Comparer).ToArray();
 			foreach (var o in rm)
 			{
-				graph[o].Clear();
-				graph.Remove(o);
+				this._graph[o].Clear();
+				this._graph.Remove(o);
 			}
-			foreach (var edges in graph.Values)
+			foreach (var edges in this._graph.Values)
 				edges.IntersectWith(other);
 		}
 
@@ -261,15 +261,15 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			HashSet<T> keys = new HashSet<T>(graph.Keys, Comparer);
-			foreach (var kvp in other.graph)
+			var keys = new HashSet<T>(this._graph.Keys, this.Comparer);
+			foreach (var kvp in other._graph)
 			{
 				keys.Remove(kvp.Key);
-				var myedges = graph[kvp.Key];
+				var myedges = this._graph[kvp.Key];
 				myedges.IntersectWith(kvp.Value);
 			}
 			foreach (var k in keys)
-				graph.Remove(k);
+				this._graph.Remove(k);
 		}
 
 		/// <summary>
@@ -283,7 +283,7 @@ namespace ExtendedSystem
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
 			bool isproper = false;
-			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => false, Comparer);
+			var keys = this._graph.Keys.ToDictionary((k) => k, (k) => false, this.Comparer);
 			foreach (var o in other)
 			{
 				if (keys.ContainsKey(o))
@@ -306,12 +306,12 @@ namespace ExtendedSystem
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
 			bool isproper = false;
-			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => false, Comparer);
-			foreach (var kvp in other.graph)
+			var keys = this._graph.Keys.ToDictionary((k) => k, (k) => false, this.Comparer);
+			foreach (var kvp in other._graph)
 			{
 				if (keys.ContainsKey(kvp.Key))
 				{
-					var myedges = graph[kvp.Key];
+					var myedges = this._graph[kvp.Key];
 					keys[kvp.Key] = true;
 					if (!myedges.IsSubsetOf(kvp.Value))
 						return false;
@@ -333,7 +333,7 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => true, Comparer);
+			var keys = this._graph.Keys.ToDictionary((k) => k, (k) => true, this.Comparer);
 			foreach (var o in other)
 			{
 				if (keys.ContainsKey(o))
@@ -355,12 +355,12 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => true, Comparer);
-			foreach (var kvp in other.graph)
+			var keys = this._graph.Keys.ToDictionary((k) => k, (k) => true, this.Comparer);
+			foreach (var kvp in other._graph)
 			{
 				if (keys.ContainsKey(kvp.Key))
 				{
-					var myedges = graph[kvp.Key];
+					var myedges = this._graph[kvp.Key];
 					if (!myedges.IsSupersetOf(kvp.Value))
 						return false;
 					if (myedges.SetEquals(kvp.Value))
@@ -382,7 +382,7 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			HashSet<T> keys = new HashSet<T>(graph.Keys, Comparer);
+			var keys = new HashSet<T>(this._graph.Keys, this.Comparer);
 			foreach (var o in other)
 			{
 				keys.Remove(o);
@@ -418,7 +418,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(other));
 			foreach (var o in other)
 			{
-				if (!graph.ContainsKey(o))
+				if (!this._graph.ContainsKey(o))
 					return false;
 			}
 			return true;
@@ -435,9 +435,9 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			foreach (var kvp in other.graph)
+			foreach (var kvp in other._graph)
 			{
-				if (!graph.ContainsKey(kvp.Key) || !graph[kvp.Key].IsSupersetOf(kvp.Value))
+				if (!this._graph.ContainsKey(kvp.Key) || !this._graph[kvp.Key].IsSupersetOf(kvp.Value))
 					return false;
 			}
 			return true;
@@ -453,7 +453,7 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			return other.Any((o) => graph.ContainsKey(o));
+			return other.Any((o) => this._graph.ContainsKey(o));
 		}
 
 		/// <summary>
@@ -463,9 +463,9 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Remove(T item)
 		{
-			if (!graph.Remove(item))
+			if (!this._graph.Remove(item))
 				return false;
-			foreach (var h in graph.Values)
+			foreach (var h in this._graph.Values)
 				h.Remove(item);
 			return true;
 		}
@@ -479,7 +479,7 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			Dictionary<T, bool> keys = graph.Keys.ToDictionary((k) => k, (k) => false, Comparer);
+			var keys = this._graph.Keys.ToDictionary((k) => k, (k) => false, this.Comparer);
 			foreach (var o in other)
 			{
 				if (keys.ContainsKey(o))
@@ -499,12 +499,12 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				return false;
-			HashSet<T> keys = new HashSet<T>(graph.Keys, Comparer);
-			foreach (var kvp in other.graph)
+			var keys = new HashSet<T>(this._graph.Keys, this.Comparer);
+			foreach (var kvp in other._graph)
 			{
 				if (keys.Contains(kvp.Key))
 				{
-					if (!graph[kvp.Key].SetEquals(kvp.Value))
+					if (!this._graph[kvp.Key].SetEquals(kvp.Value))
 						return false;
 					keys.Remove(kvp.Key);
 				}
@@ -519,7 +519,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public override bool Equals(object obj)
 		{
-			Graph<T> g = obj as Graph<T>;
+			var g = obj as Graph<T>;
 			if (g == null)
 				return false;
 			return Equals(g);
@@ -533,11 +533,11 @@ namespace ExtendedSystem
 		public override int GetHashCode()
 		{
 			int hash = 0;
-			foreach (var kvp in graph)
+			foreach (var kvp in this._graph)
 			{
-				hash ^= Comparer.GetHashCode(kvp.Key);
+				hash ^= this.Comparer.GetHashCode(kvp.Key);
 				foreach (var val in kvp.Value)
-					hash ^= Comparer.GetHashCode(val);
+					hash ^= this.Comparer.GetHashCode(val);
 			}
 			return hash;
 		}
@@ -553,8 +553,8 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			HashSet<T> toAdd = new HashSet<T>(Comparer);
-			HashSet<T> toRemove = new HashSet<T>(Comparer);
+			var toAdd = new HashSet<T>(this.Comparer);
+			var toRemove = new HashSet<T>(this.Comparer);
 			foreach (var o in other)
 			{
 				if (Contains(o))
@@ -599,12 +599,12 @@ namespace ExtendedSystem
 		{
 			if (other == null)
 				throw new ArgumentNullException(nameof(other));
-			foreach (var kvp in other.graph)
+			foreach (var kvp in other._graph)
 			{
 				if (Contains(kvp.Key))
-					graph[kvp.Key].UnionWith(kvp.Value);
+					this._graph[kvp.Key].UnionWith(kvp.Value);
 				else
-					graph.Add(kvp.Key, new HashSet<T>(kvp.Value, Comparer)); // Why are we not checking for vertices we don't have? Because we're adding those too!
+					this._graph.Add(kvp.Key, new HashSet<T>(kvp.Value, this.Comparer)); // Why are we not checking for vertices we don't have? Because we're adding those too!
 			}
 		}
 
@@ -628,18 +628,18 @@ namespace ExtendedSystem
 		/// <param name="to"></param>
 		public bool TestReachable(T from, T to)
 		{
-			if (!graph.ContainsKey(from))
+			if (!this._graph.ContainsKey(from))
 				return false;
-			HashSet<T> tried = new HashSet<T>(Comparer);
-			HashSet<T> leftToTry = new HashSet<T>(graph[from], Comparer);
+			var tried = new HashSet<T>(this.Comparer);
+			var leftToTry = new HashSet<T>(this._graph[from], this.Comparer);
 			while (leftToTry.Count > 0)
 			{
-				T which = leftToTry.First();
+				var which = leftToTry.First();
 				tried.Add(which);
 				leftToTry.Remove(which);
-				if (Comparer.Equals(to, which))
+				if (this.Comparer.Equals(to, which))
 					return true;
-				leftToTry.UnionWith(graph[which]);
+				leftToTry.UnionWith(this._graph[which]);
 				leftToTry.ExceptWith(tried);
 			}
 			return false;
@@ -652,9 +652,9 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsUndirected()
 		{
-			foreach (var kvp in graph)
+			foreach (var kvp in this._graph)
 				foreach (var v in kvp.Value)
-					if (!graph[v].Contains(kvp.Key))
+					if (!this._graph[v].Contains(kvp.Key))
 						return false;
 			return true;
 		}
@@ -666,7 +666,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsRegular()
 		{
-			return graph.Select((kvp) => kvp.Value.Count).Distinct().Count() == 1;
+			return this._graph.Select((kvp) => kvp.Value.Count).Distinct().Count() == 1;
 		}
 
 		/// <summary>
@@ -675,9 +675,9 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool IsComplete()
 		{
-			foreach (var kvp in graph)
+			foreach (var kvp in this._graph)
 			{
-				if (!graph.Keys.All((k) => Comparer.Equals(k, kvp.Key) || kvp.Value.Contains(k)))
+				if (!this._graph.Keys.All((k) => this.Comparer.Equals(k, kvp.Key) || kvp.Value.Contains(k)))
 					return false;
 			}
 			return true;
@@ -691,9 +691,9 @@ namespace ExtendedSystem
 		/// </summary>
 		public void MakeComplete()
 		{
-			foreach (var kvp in graph)
+			foreach (var kvp in this._graph)
 			{
-				kvp.Value.UnionWith(graph.Keys);
+				kvp.Value.UnionWith(this._graph.Keys);
 				kvp.Value.Remove(kvp.Key);
 			}
 		}

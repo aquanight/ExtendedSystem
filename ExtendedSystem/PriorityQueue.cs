@@ -19,7 +19,7 @@ namespace ExtendedSystem
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix")]
 	public sealed class PriorityQueue<T> : ICollection<T>, IEnumerable<T>, IReadOnlyCollection<T>, IOrderedEnumerable<T>
 	{
-		private LinkedList<T> entries;
+		private LinkedList<T> _entries;
 
 		/// <summary>
 		/// Returns the comparer associated with this priority queue.
@@ -36,7 +36,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return entries.Count;
+				return this._entries.Count;
 			}
 		}
 
@@ -64,10 +64,8 @@ namespace ExtendedSystem
 		/// <param name="comparer"></param>
 		public PriorityQueue(IComparer<T> comparer)
 		{
-			if (comparer == null)
-				throw new ArgumentNullException("comparer");
-			entries = new LinkedList<T>();
-			Comparer = comparer;
+			this.Comparer = comparer ?? throw new ArgumentNullException("comparer");
+			this._entries = new LinkedList<T>();
 		}
 
 		/// <summary>
@@ -102,16 +100,16 @@ namespace ExtendedSystem
 		/// <param name="item"></param>
 		public void Enqueue(T item)
 		{
-			for (var n = entries.First; n != null; n = n.Next)
+			for (var n = this._entries.First; n != null; n = n.Next)
 			{
-				if (Comparer.Compare(item, n.Value) < 0)
+				if (this.Comparer.Compare(item, n.Value) < 0)
 				{
-					entries.AddBefore(n, item);
+					this._entries.AddBefore(n, item);
 					return;
 				}
 
 			}
-			entries.AddLast(item);
+			this._entries.AddLast(item);
 		}
 
 		/// <summary>
@@ -120,8 +118,8 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public T Dequeue()
 		{
-			var n = entries.First;
-			entries.RemoveFirst();
+			var n = this._entries.First;
+			this._entries.RemoveFirst();
 			return n.Value;
 		}
 
@@ -143,7 +141,7 @@ namespace ExtendedSystem
 		public void AddRange(IEnumerable<T> collection)
 		{
 			var sorted = collection.OrderBy((x) => x, this.Comparer);
-			var n = entries.First;
+			var n = this._entries.First;
 			using (var e = sorted.GetEnumerator())
 			{
 				if (!e.MoveNext())
@@ -154,13 +152,13 @@ namespace ExtendedSystem
 					{
 						do
 						{
-							entries.AddLast(e.Current);
+							this._entries.AddLast(e.Current);
 						} while (e.MoveNext());
 						break;
 					}
-					else if (Comparer.Compare(e.Current, n.Value) < 0)
+					else if (this.Comparer.Compare(e.Current, n.Value) < 0)
 					{
-						entries.AddBefore(n, e.Current);
+						this._entries.AddBefore(n, e.Current);
 						if (!e.MoveNext())
 							break;
 					}
@@ -177,7 +175,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public void Clear()
 		{
-			entries.Clear();
+			this._entries.Clear();
 		}
 
 		/// <summary>
@@ -187,7 +185,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Contains(T item)
 		{
-			return entries.Contains(item);
+			return this._entries.Contains(item);
 		}
 
 		/// <summary>
@@ -198,7 +196,7 @@ namespace ExtendedSystem
 		/// <param name="arrayIndex"></param>
 		public void CopyTo(T[] array, int arrayIndex)
 		{
-			entries.CopyTo(array, arrayIndex);
+			this._entries.CopyTo(array, arrayIndex);
 		}
 
 		/// <summary>
@@ -208,7 +206,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Remove(T item)
 		{
-			return entries.Remove(item);
+			return this._entries.Remove(item);
 		}
 
 		/// <summary>
@@ -218,7 +216,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public IEnumerator<T> GetEnumerator()
 		{
-			return entries.GetEnumerator();
+			return this._entries.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -228,8 +226,8 @@ namespace ExtendedSystem
 
 		private class SuborderedList : IOrderedEnumerable<T>
 		{
-			internal PriorityQueue<T> instance;
-			internal IComparer<T>[] comparerChain;
+			internal PriorityQueue<T> _instance;
+			internal IComparer<T>[] _comparerChain;
 
 			internal SuborderedList()
 			{
@@ -245,25 +243,25 @@ namespace ExtendedSystem
 
 			public IOrderedEnumerable<T> CreateOrderedEnumerable<TKey>(Func<T, TKey> keySelector, IComparer<TKey> comparer, bool descending)
 			{
-				return new SuborderedList() { instance = this.instance, comparerChain = this.comparerChain.Append(MakeComparer(keySelector, comparer, descending)) };
+				return new SuborderedList() { _instance = this._instance, _comparerChain = this._comparerChain.Append(MakeComparer(keySelector, comparer, descending)) };
 			}
 
 			public IEnumerator<T> GetEnumerator()
 			{
 				// Primary sorting must still be by priority.
-				var n = instance.entries.First;
+				var n = this._instance._entries.First;
 				while (n != null)
 				{
 					var n2 = n;
-					List<LinkedListNode<T>> subset = new List<LinkedListNode<T>>();
-					while (n2 != null && instance.Comparer.Compare(n.Value, n2.Value) == 0)
+					var subset = new List<LinkedListNode<T>>();
+					while (n2 != null && this._instance.Comparer.Compare(n.Value, n2.Value) == 0)
 					{
 						subset.Add(n2);
 						n2 = n2.Next;
 					}
 					n = n2;
 					IOrderedEnumerable<LinkedListNode<T>> sorted;
-					using (var e = comparerChain.AsEnumerable().GetEnumerator())
+					using (var e = this._comparerChain.AsEnumerable().GetEnumerator())
 					{
 						if (!e.MoveNext())
 							throw new InvalidOperationException("This should not be empty.");

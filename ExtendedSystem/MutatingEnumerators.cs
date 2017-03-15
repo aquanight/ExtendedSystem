@@ -36,9 +36,9 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				if (_target == null)
+				if (this._target == null)
 					throw new ObjectDisposedException("enumerator");
-				return _target;
+				return this._target;
 			}
 		}
 
@@ -50,9 +50,9 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				if (_target == null)
+				if (this._target == null)
 					throw new ObjectDisposedException("enumerator");
-				return _position;
+				return this._position;
 			}
 		}
 		/// <summary>
@@ -65,15 +65,15 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				if (_target == null)
+				if (this._target == null)
 					throw new ObjectDisposedException("enumerator");
-				return _inbetween;
+				return this._inbetween;
 			}
 		}
 
 		public ListMutatingEnumerator(IList<T> target)
 		{
-			_target = target;
+			this._target = target;
 		}
 
 		/// <summary>
@@ -83,19 +83,19 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				if (_inbetween)
+				if (this._inbetween)
 					throw new InvalidOperationException("The current position is not valid.");
-				if (_position >= _target.Count)
+				if (this._position >= this._target.Count)
 					throw new InvalidOperationException("The enumerator has passed the collection end.");
-				return Target[_position];
+				return this.Target[this._position];
 			}
 			set
 			{
-				if (_inbetween)
+				if (this._inbetween)
 					throw new InvalidOperationException("The current position is not valid.");
-				if (_position >= _target.Count)
+				if (this._position >= this._target.Count)
 					throw new InvalidOperationException("The enumerator has passed the collection end.");
-				Target[_position] = value;
+				this.Target[this._position] = value;
 			}
 		}
 
@@ -114,7 +114,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return Target.Count - _position;
+				return this.Target.Count - this._position;
 			}
 		}
 
@@ -125,7 +125,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return Target.IsReadOnly;
+				return this.Target.IsReadOnly;
 			}
 		}
 
@@ -141,31 +141,31 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				if (_inbetween && index == 0)
+				if (this._inbetween && index == 0)
 					throw new InvalidOperationException("The current position is not valid.");
-				if (_inbetween && index > 0)
+				if (this._inbetween && index > 0)
 					--index;
-				index += _position;
-				if (index < 0 || index >= Target.Count)
+				index += this._position;
+				if (index < 0 || index >= this.Target.Count)
 					throw new InvalidOperationException("The index is outside the container's bounds.");
-				return _target[index];
+				return this._target[index];
 			}
 			set
 			{
-				if (_inbetween && index == 0)
+				if (this._inbetween && index == 0)
 					throw new InvalidOperationException("The current position is not valid.");
-				if (_inbetween && index > 0)
+				if (this._inbetween && index > 0)
 					--index;
-				index += _position;
-				if (index < 0 || index >= Target.Count)
+				index += this._position;
+				if (index < 0 || index >= this.Target.Count)
 					throw new InvalidOperationException("The index is outside the container's bounds.");
-				_target[index] = value;
+				this._target[index] = value;
 			}
 		}
 
 		public void Dispose()
 		{
-			_target = null;
+			this._target = null;
 		}
 
 		/// <summary>
@@ -175,53 +175,53 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool MoveNext()
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
-			if (_inbetween)
+			if (this._inbetween)
 			{
-				return !(_inbetween = _position >= _target.Count);
+				return !(this._inbetween = this._position >= this._target.Count);
 			}
-			++_position;
-			return !(_inbetween = (++_position >= _target.Count));
+			++this._position;
+			return !(this._inbetween = (++this._position >= this._target.Count));
 		}
 
 		public bool MovePrevious()
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
-			if (_position > 0)
+			if (this._position > 0)
 			{
-				_inbetween = false;
-				--_position;
+				this._inbetween = false;
+				--this._position;
 				return true;
 			}
 			else
 			{
-				_inbetween = true;
+				this._inbetween = true;
 				return false;
 			}
 		}
 
 		public bool MoveBy(int offset)
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
-			if (_inbetween && offset == 0)
+			if (this._inbetween && offset == 0)
 				throw new InvalidOperationException("The current position is not valid.");
-			else if (_inbetween && offset > 0)
+			else if (this._inbetween && offset > 0)
 				--offset;
-			_position += offset;
-			_inbetween = false;
-			if (_position < 0)
+			this._position += offset;
+			this._inbetween = false;
+			if (this._position < 0)
 			{
-				_position = 0;
-				_inbetween = true;
+				this._position = 0;
+				this._inbetween = true;
 				return false;
 			}
-			else if (_position > Target.Count)
+			else if (this._position > this.Target.Count)
 			{
-				_position = Target.Count;
-				_inbetween = true;
+				this._position = this.Target.Count;
+				this._inbetween = true;
 				return false;
 			}
 			return true;
@@ -229,22 +229,22 @@ namespace ExtendedSystem
 
 		public bool MoveTo(int newPosition)
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
 			if (newPosition < 0)
 			{
-				_position = 0;
-				_inbetween = true;
+				this._position = 0;
+				this._inbetween = true;
 				return false;
 			}
-			else if (newPosition > _target.Count)
+			else if (newPosition > this._target.Count)
 			{
-				_position = _target.Count;
-				_inbetween = true;
+				this._position = this._target.Count;
+				this._inbetween = true;
 				return false;
 			}
-			_position = newPosition;
-			_inbetween = false;
+			this._position = newPosition;
+			this._inbetween = false;
 			return true;
 		}
 
@@ -253,10 +253,10 @@ namespace ExtendedSystem
 		/// </summary>
 		public void Reset()
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
-			_position = 0;
-			_inbetween = true;
+			this._position = 0;
+			this._inbetween = true;
 		}
 
 		/// <summary>
@@ -268,11 +268,11 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public int IndexOf(T item)
 		{
-			int index = Target.IndexOf(item);
-			if (_inbetween && index >= _position)
-				return (index + 1) - _position;
+			int index = this.Target.IndexOf(item);
+			if (this._inbetween && index >= this._position)
+				return (index + 1) - this._position;
 			else
-				return index - _position;
+				return index - this._position;
 		}
 
 		/// <summary>
@@ -283,16 +283,16 @@ namespace ExtendedSystem
 		/// <param name="item"></param>
 		public void Insert(int index, T item)
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
-			if (_inbetween && index == 0)
+			if (this._inbetween && index == 0)
 				throw new InvalidOperationException("The current position is not valid.");
-			else if (_inbetween && index > 0)
+			else if (this._inbetween && index > 0)
 				--index;
-			index += _position;
-			_target.Insert(index, item);
-			if (_position >= index)
-				++_position;
+			index += this._position;
+			this._target.Insert(index, item);
+			if (this._position >= index)
+				++this._position;
 		}
 
 		/// <summary>
@@ -310,10 +310,10 @@ namespace ExtendedSystem
 		/// <param name="item"></param>
 		public void InsertCurrent(T item)
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
-			_target.Insert(_position, item);
-			_inbetween = false;
+			this._target.Insert(this._position, item);
+			this._inbetween = false;
 		}
 
 		/// <summary>
@@ -324,18 +324,18 @@ namespace ExtendedSystem
 		/// <param name="index"></param>
 		public void RemoveAt(int index)
 		{
-			if (_target == null)
+			if (this._target == null)
 				throw new ObjectDisposedException("enumerator");
-			if (_inbetween && index == 0)
+			if (this._inbetween && index == 0)
 				throw new InvalidOperationException("The current position is not valid.");
-			else if (_inbetween && index > 0)
+			else if (this._inbetween && index > 0)
 				--index;
-			index += _position;
-			_target.RemoveAt(index);
-			if (_position > index)
-				--_position;
-			else if (_position == index)
-				_inbetween = true;
+			index += this._position;
+			this._target.RemoveAt(index);
+			if (this._position > index)
+				--this._position;
+			else if (this._position == index)
+				this._inbetween = true;
 		}
 
 		/// <summary>
@@ -352,7 +352,7 @@ namespace ExtendedSystem
 		/// <param name="item"></param>
 		public void Add(T item)
 		{
-			Target.Add(item);
+			this.Target.Add(item);
 		}
 
 		/// <summary>
@@ -360,7 +360,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public void Clear()
 		{
-			Target.Clear();
+			this.Target.Clear();
 			Reset();
 		}
 
@@ -371,7 +371,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool Contains(T item)
 		{
-			return Target.Contains(item);
+			return this.Target.Contains(item);
 		}
 
 		/// <summary>
@@ -381,7 +381,7 @@ namespace ExtendedSystem
 		/// <param name="arrayIndex"></param>
 		public void CopyTo(T[] array, int arrayIndex)
 		{
-			Target.CopyTo(array, arrayIndex);
+			this.Target.CopyTo(array, arrayIndex);
 		}
 
 		/// <summary>
@@ -392,7 +392,7 @@ namespace ExtendedSystem
 		public bool Remove(T item)
 		{
 			int offset = IndexOf(item);
-			if (offset >= -(_position + 1))
+			if (offset >= -(this._position + 1))
 			{
 				RemoveAt(offset);
 				return true;

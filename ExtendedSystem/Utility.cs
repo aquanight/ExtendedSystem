@@ -58,7 +58,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(newDelegate));
 			var mthd = @delegate.Method;
 			object tgt = @delegate.Target;
-			Type[] sig = @delegate.GetType().GetMethod("Invoke").GetParameters().Select((pi) => pi.ParameterType).ToArray();
+			var sig = @delegate.GetType().GetMethod("Invoke").GetParameters().Select((pi) => pi.ParameterType).ToArray();
 			if (sig.Length < 1)
 				throw new InvalidOperationException("There is no parameter to bind.");
 			if (!sig[0].IsInstanceOfType(value))
@@ -73,19 +73,19 @@ namespace ExtendedSystem
 			else
 			{
 				// We need to keep both the supplied first-argument and the new bound argument...
-				ConstantExpression dlgTarget = Expression.Constant(tgt);
-				ConstantExpression boundParam = Expression.Constant(value, sig[0]);
-				Type[] newSig = sig.Skip(1).ToArray();
-				ParameterExpression[] param = newSig.Select((t) => Expression.Parameter(t)).ToArray();
+				var dlgTarget = Expression.Constant(tgt);
+				var boundParam = Expression.Constant(value, sig[0]);
+				var newSig = sig.Skip(1).ToArray();
+				var param = newSig.Select((t) => Expression.Parameter(t)).ToArray();
 				MethodCallExpression callexp;
 				if (mthd.IsStatic)
 				{
-					Expression[] arguments = (new Expression[] { dlgTarget, boundParam }).Concat(param).ToArray();
+					var arguments = (new Expression[] { dlgTarget, boundParam }).Concat(param).ToArray();
 					callexp = Expression.Call(mthd, arguments);
 				}
 				else
 				{
-					Expression[] arguments = Enumerable.Repeat<Expression>(boundParam, 1).Concat(param).ToArray();
+					var arguments = Enumerable.Repeat<Expression>(boundParam, 1).Concat(param).ToArray();
 					callexp = Expression.Call(dlgTarget, mthd, arguments);
 				}
 				return Expression.Lambda(newDelegate, callexp, true, param).Compile();
@@ -299,7 +299,7 @@ namespace ExtendedSystem
 			if (stopwatch == null)
 				throw new ArgumentNullException("stopwatch");
 			stopwatch.Stop();
-			TimeSpan et = stopwatch.Elapsed;
+			var et = stopwatch.Elapsed;
 			stopwatch.Restart();
 			return et;
 		}

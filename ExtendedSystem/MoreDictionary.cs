@@ -23,36 +23,36 @@ namespace ExtendedSystem
 	/// <typeparam name="V">The value type of the original dictionary.</typeparam>
 	public sealed class InvertedDictionary<TKey, TValue> : IDictionary<TValue, ICollection<TKey>>
 	{
-		private IDictionary<TKey, TValue> source;
+		private IDictionary<TKey, TValue> _source;
 
 		public InvertedDictionary(IDictionary<TKey, TValue> source)
 		{
-			this.source = source;
+			this._source = source;
 		}
 
 		internal class KeysWithValue : ICollection<TKey>
 		{
-			internal InvertedDictionary<TKey, TValue> outer;
-			internal TValue val;
-			internal bool nomod;
+			internal InvertedDictionary<TKey, TValue> _outer;
+			internal TValue _val;
+			internal bool _nomod;
 
 			internal bool _finder(KeyValuePair<TKey, TValue> kvp)
 			{
-				return kvp.Equals(val);
+				return kvp.Equals(this._val);
 			}
 
 			internal KeysWithValue(InvertedDictionary<TKey, TValue> otr, TValue v, bool noModify)
 			{
-				outer = otr;
-				val = v;
-				nomod = noModify;
+				this._outer = otr;
+				this._val = v;
+				this._nomod = noModify;
 			}
 
 			public int Count
 			{
 				get
 				{
-					return outer.source.Count(_finder);
+					return this._outer._source.Count(this._finder);
 				}
 			}
 
@@ -60,42 +60,42 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return nomod || outer.IsReadOnly;
+					return this._nomod || this._outer.IsReadOnly;
 				}
 			}
 
 			public void Add(TKey item)
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				outer.source.Add(item, val);
+				this._outer._source.Add(item, this._val);
 			}
 
 			public void Clear()
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
 				KeyValuePair<TKey, TValue>? kvp;
-				while ((kvp = outer.source.FirstOrNull(_finder)).HasValue)
+				while ((kvp = this._outer._source.FirstOrNull(this._finder)).HasValue)
 				{
-					outer.source.Remove(kvp.Value.Key);
+					this._outer._source.Remove(kvp.Value.Key);
 				}
 			}
 
 			public bool Contains(TKey item)
 			{
-				return outer.source.Any(_finder);
+				return this._outer._source.Any(this._finder);
 			}
 
 			public void CopyTo(TKey[] array, int arrayIndex)
 			{
-				TKey[] keys = outer.source.Where(_finder).Select((kvp) => kvp.Key).ToArray();
+				var keys = this._outer._source.Where(this._finder).Select((kvp) => kvp.Key).ToArray();
 				keys.CopyTo(array, arrayIndex);
 			}
 
 			public IEnumerator<TKey> GetEnumerator()
 			{
-				foreach (var kvp in outer.source.Where(_finder))
+				foreach (var kvp in this._outer._source.Where(this._finder))
 				{
 					yield return kvp.Key;
 				}
@@ -103,13 +103,12 @@ namespace ExtendedSystem
 
 			public bool Remove(TKey item)
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				TValue _v;
-				if (!outer.source.TryGetValue(item, out _v))
+				if (!this._outer._source.TryGetValue(item, out var _v))
 					return false;
 				if (_v.Equals(item))
-					return outer.source.Remove(item);
+					return this._outer._source.Remove(item);
 				return false;
 			}
 
@@ -150,21 +149,21 @@ namespace ExtendedSystem
 
 			set
 			{
-				if (source.IsReadOnly)
+				if (this._source.IsReadOnly)
 					throw new NotSupportedException("This dictionary is read-only.");
-				TKey[] keys = value.ToArray();
+				var keys = value.ToArray();
 				var kwv = new KeysWithValue(this, key, false);
-				TKey[] original = kwv.ToArray();
+				var original = kwv.ToArray();
 				kwv.Clear();
 				try
 				{
-					foreach (TKey k in keys)
+					foreach (var k in keys)
 						kwv.Add(k);
 				}
 				catch (Exception)
 				{
 					kwv.Clear();
-					foreach (TKey k in original)
+					foreach (var k in original)
 						kwv.Add(k);
 					throw;
 				}
@@ -178,7 +177,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return source.Select((kvp) => kvp.Value).Distinct().Count();
+				return this._source.Select((kvp) => kvp.Value).Distinct().Count();
 			}
 		}
 
@@ -189,24 +188,24 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return source.IsReadOnly;
+				return this._source.IsReadOnly;
 			}
 		}
 
 		internal class ValueCollection : ICollection<TValue>
 		{
-			InvertedDictionary<TKey, TValue> outer;
+			InvertedDictionary<TKey, TValue> _outer;
 
 			internal ValueCollection(InvertedDictionary<TKey, TValue> otr)
 			{
-				outer = otr;
+				this._outer = otr;
 			}
 
 			public int Count
 			{
 				get
 				{
-					return outer.Count;
+					return this._outer.Count;
 				}
 			}
 
@@ -230,17 +229,17 @@ namespace ExtendedSystem
 
 			public bool Contains(TValue item)
 			{
-				return outer.source.Any((kvp) => kvp.Value.Equals(item));
+				return this._outer._source.Any((kvp) => kvp.Value.Equals(item));
 			}
 
 			public void CopyTo(TValue[] array, int arrayIndex)
 			{
-				outer.source.GroupBy((kvp) => kvp.Value).Select((grp) => grp.Key).CopyTo(array, arrayIndex);
+				this._outer._source.GroupBy((kvp) => kvp.Value).Select((grp) => grp.Key).CopyTo(array, arrayIndex);
 			}
 
 			public IEnumerator<TValue> GetEnumerator()
 			{
-				return outer.source.GroupBy((kvp) => kvp.Value).Select((grp) => grp.Key).GetEnumerator();
+				return this._outer._source.GroupBy((kvp) => kvp.Value).Select((grp) => grp.Key).GetEnumerator();
 			}
 
 			public bool Remove(TValue item)
@@ -267,18 +266,18 @@ namespace ExtendedSystem
 
 		internal class KeyCollection : ICollection<ICollection<TKey>>
 		{
-			InvertedDictionary<TKey, TValue> outer;
+			InvertedDictionary<TKey, TValue> _outer;
 
 			internal KeyCollection(InvertedDictionary<TKey, TValue> otr)
 			{
-				outer = otr;
+				this._outer = otr;
 			}
 
 			public int Count
 			{
 				get
 				{
-					return outer.Count;
+					return this._outer.Count;
 				}
 			}
 
@@ -302,18 +301,18 @@ namespace ExtendedSystem
 
 			public bool Contains(ICollection<TKey> item)
 			{
-				return outer.source.GroupBy((kvp) => kvp.Value).Any((grp) => item.All((i) => grp.Any((kvp) => kvp.Key.Equals(i))));
+				return this._outer._source.GroupBy((kvp) => kvp.Value).Any((grp) => item.All((i) => grp.Any((kvp) => kvp.Key.Equals(i))));
 			}
 
 			public void CopyTo(ICollection<TKey>[] array, int arrayIndex)
 			{
-				outer.source.GroupBy((kvp) => kvp.Value).Select((grp) => new KeysWithValue(outer, grp.Key, true)).CopyTo(array, arrayIndex);
+				this._outer._source.GroupBy((kvp) => kvp.Value).Select((grp) => new KeysWithValue(this._outer, grp.Key, true)).CopyTo(array, arrayIndex);
 			}
 
 			public IEnumerator<ICollection<TKey>> GetEnumerator()
 			{
-				foreach (var grp in outer.source.GroupBy((kvp) => kvp.Value))
-					yield return new KeysWithValue(outer, grp.Key, true);
+				foreach (var grp in this._outer._source.GroupBy((kvp) => kvp.Value))
+					yield return new KeysWithValue(this._outer, grp.Key, true);
 			}
 
 			public bool Remove(ICollection<TKey> item)
@@ -360,7 +359,7 @@ namespace ExtendedSystem
 			if (value == null)
 				throw new ArgumentNullException("value");
 			var kwv = this[key];
-			foreach (TKey k in value)
+			foreach (var k in value)
 				kwv.Add(k);
 		}
 
@@ -369,7 +368,7 @@ namespace ExtendedSystem
 		/// </summary>
 		public void Clear()
 		{
-			source.Clear();
+			this._source.Clear();
 		}
 
 		/// <summary>
@@ -390,31 +389,31 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public bool ContainsKey(TValue key)
 		{
-			return source.Any((kvp) => kvp.Value.Equals(key));
+			return this._source.Any((kvp) => kvp.Value.Equals(key));
 		}
 
 		public void CopyTo(KeyValuePair<TValue, ICollection<TKey>>[] array, int arrayIndex)
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
-			var cnt = source.GroupBy((kvp) => kvp.Value);
+			var cnt = this._source.GroupBy((kvp) => kvp.Value);
 			if (cnt.Count() > (array.Length - arrayIndex))
 				throw new ArgumentException("Not enough space in the array.");
 			var e = cnt.GetEnumerator();
 			while (e.MoveNext())
 			{
-				KeyValuePair<TValue, ICollection<TKey>> item = new KeyValuePair<TValue, ICollection<TKey>>(e.Current.Key, new KeysWithValue(this, e.Current.Key, true));
+				var item = new KeyValuePair<TValue, ICollection<TKey>>(e.Current.Key, new KeysWithValue(this, e.Current.Key, true));
 				array[arrayIndex++] = item;
 			}
 		}
 
 		public IEnumerator<KeyValuePair<TValue, ICollection<TKey>>> GetEnumerator()
 		{
-			var cnt = source.GroupBy((kvp) => kvp.Value);
+			var cnt = this._source.GroupBy((kvp) => kvp.Value);
 			var e = cnt.GetEnumerator();
 			while (e.MoveNext())
 			{
-				KeyValuePair<TValue, ICollection<TKey>> item = new KeyValuePair<TValue, ICollection<TKey>>(e.Current.Key, new KeysWithValue(this, e.Current.Key, true));
+				var item = new KeyValuePair<TValue, ICollection<TKey>>(e.Current.Key, new KeysWithValue(this, e.Current.Key, true));
 				yield return item;
 			}
 		}
@@ -429,7 +428,7 @@ namespace ExtendedSystem
 		{
 			bool any = false;
 			var kwv = this[item.Key];
-			foreach (TKey k in item.Value)
+			foreach (var k in item.Value)
 				if (kwv.Remove(k))
 					any = true;
 			return any;
@@ -527,19 +526,19 @@ namespace ExtendedSystem
 
 		internal class WhereKeyDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 		{
-			internal IDictionary<TKey, TValue> source;
-			internal Func<TKey, bool> predicate;
+			internal IDictionary<TKey, TValue> _source;
+			internal Func<TKey, bool> _predicate;
 
-			private bool kvpsel(KeyValuePair<TKey, TValue> kvp)
+			private bool KeyPredicate(KeyValuePair<TKey, TValue> kvp)
 			{
-				return predicate(kvp.Key);
+				return this._predicate(kvp.Key);
 			}
 
 			public ICollection<TKey> Keys
 			{
 				get
 				{
-					return this.source.Keys.Where(predicate).AsCollection();
+					return this._source.Keys.Where(this._predicate).AsCollection();
 				}
 			}
 
@@ -547,7 +546,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.Keys.Where(predicate).Select((k) => source[k]).AsCollection();
+					return this._source.Keys.Where(this._predicate).Select((k) => this._source[k]).AsCollection();
 				}
 			}
 
@@ -555,7 +554,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.Count(kvpsel);
+					return this._source.Count(this.KeyPredicate);
 				}
 			}
 
@@ -563,7 +562,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.IsReadOnly;
+					return this._source.IsReadOnly;
 				}
 			}
 
@@ -571,16 +570,16 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					if (predicate(key))
-						return this.source[key];
+					if (this._predicate(key))
+						return this._source[key];
 					else
 						throw new KeyNotFoundException();
 				}
 
 				set
 				{
-					if (predicate(key))
-						this.source[key] = value;
+					if (this._predicate(key))
+						this._source[key] = value;
 					else
 						throw new ArgumentException("The key is not accepted by this filtered dictionary.");
 				}
@@ -588,64 +587,64 @@ namespace ExtendedSystem
 
 			public bool ContainsKey(TKey key)
 			{
-				return predicate(key) && this.source.ContainsKey(key);
+				return this._predicate(key) && this._source.ContainsKey(key);
 			}
 
 			public void Add(TKey key, TValue value)
 			{
-				if (!predicate(key))
+				if (!this._predicate(key))
 					throw new ArgumentException("The key is not accepted by this filtered dictionary.");
-				this.source.Add(key, value);
+				this._source.Add(key, value);
 			}
 
 			public bool Remove(TKey key)
 			{
-				return predicate(key) && this.source.Remove(key);
+				return this._predicate(key) && this._source.Remove(key);
 			}
 
 			public bool TryGetValue(TKey key, out TValue value)
 			{
-				if (!predicate(key))
+				if (!this._predicate(key))
 				{
 					value = default(TValue);
 					return false;
 				}
-				return this.source.TryGetValue(key, out value);
+				return this._source.TryGetValue(key, out value);
 			}
 
 			public void Add(KeyValuePair<TKey, TValue> item)
 			{
-				if (!predicate(item.Key))
+				if (!this._predicate(item.Key))
 					throw new ArgumentException("The key is not accepted by this filtered dictionary.");
-				this.source.Add(item);
+				this._source.Add(item);
 			}
 
 			public void Clear()
 			{
-				TKey[] keys = this.Keys.ToArray();
-				foreach (TKey k in keys)
-					this.source.Remove(k);
+				var keys = this.Keys.ToArray();
+				foreach (var k in keys)
+					this._source.Remove(k);
 			}
 
 			public bool Contains(KeyValuePair<TKey, TValue> item)
 			{
-				return predicate(item.Key) && this.source.Contains(item);
+				return this._predicate(item.Key) && this._source.Contains(item);
 			}
 
 			public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
 			{
-				KeyValuePair<TKey, TValue>[] items = this.source.Where(kvpsel).ToArray();
+				var items = this._source.Where(this.KeyPredicate).ToArray();
 				items.CopyTo(array, arrayIndex);
 			}
 
 			public bool Remove(KeyValuePair<TKey, TValue> item)
 			{
-				return predicate(item.Key) && this.source.Remove(item);
+				return this._predicate(item.Key) && this._source.Remove(item);
 			}
 
 			public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 			{
-				return this.source.Where(kvpsel).GetEnumerator();
+				return this._source.Where(this.KeyPredicate).GetEnumerator();
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -656,19 +655,19 @@ namespace ExtendedSystem
 
 		internal class WhereValueDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 		{
-			internal IDictionary<TKey, TValue> source;
-			internal Func<TValue, bool> predicate;
+			internal IDictionary<TKey, TValue> _source;
+			internal Func<TValue, bool> _predicate;
 
-			private bool kvpsel(KeyValuePair<TKey, TValue> kvp)
+			private bool ValuePredicate(KeyValuePair<TKey, TValue> kvp)
 			{
-				return predicate(kvp.Value);
+				return this._predicate(kvp.Value);
 			}
 
 			public ICollection<TKey> Keys
 			{
 				get
 				{
-					return this.source.Where(kvpsel).Select((kvp) => kvp.Key).AsCollection();
+					return this._source.Where(this.ValuePredicate).Select((kvp) => kvp.Key).AsCollection();
 				}
 			}
 
@@ -676,7 +675,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.Where(kvpsel).Select((kvp) => kvp.Value).AsCollection();
+					return this._source.Where(this.ValuePredicate).Select((kvp) => kvp.Value).AsCollection();
 				}
 			}
 
@@ -684,7 +683,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.Count(kvpsel);
+					return this._source.Count(this.ValuePredicate);
 				}
 			}
 
@@ -692,7 +691,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.IsReadOnly;
+					return this._source.IsReadOnly;
 				}
 			}
 
@@ -700,41 +699,41 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					TValue v = this.source[key];
-					if (!predicate(v))
+					var v = this._source[key];
+					if (!this._predicate(v))
 						throw new KeyNotFoundException();
 					return v;
 				}
 
 				set
 				{
-					if (!predicate(value))
+					if (!this._predicate(value))
 						throw new InvalidOperationException("Value is not accepted by this filtered dictionary.");
-					this.source[key] = value;
+					this._source[key] = value;
 				}
 			}
 
 			public bool ContainsKey(TKey key)
 			{
-				return this.source.Any((kvp) => kvp.Key.Equals(key) && predicate(kvp.Value));
+				return this._source.Any((kvp) => kvp.Key.Equals(key) && this._predicate(kvp.Value));
 			}
 
 			public void Add(TKey key, TValue value)
 			{
-				if (!predicate(value))
+				if (!this._predicate(value))
 					throw new InvalidOperationException("Value is not accepted by this filtered dictionary.");
-				this.source.Add(key, value);
+				this._source.Add(key, value);
 			}
 
 			public bool Remove(TKey key)
 			{
-				return this.source.ContainsKey(key) && predicate(this.source[key]) && this.source.Remove(key);
+				return this._source.ContainsKey(key) && this._predicate(this._source[key]) && this._source.Remove(key);
 			}
 
 			public bool TryGetValue(TKey key, out TValue value)
 			{
-				bool b = this.source.TryGetValue(key, out value);
-				if (b && predicate(value))
+				bool b = this._source.TryGetValue(key, out value);
+				if (b && this._predicate(value))
 					return true;
 				value = default(TValue);
 				return false;
@@ -742,37 +741,37 @@ namespace ExtendedSystem
 
 			public void Add(KeyValuePair<TKey, TValue> item)
 			{
-				if (!predicate(item.Value))
+				if (!this._predicate(item.Value))
 					throw new InvalidOperationException("Value is not accepted by this filtered dictionary.");
-				this.source.Add(item);
+				this._source.Add(item);
 			}
 
 			public void Clear()
 			{
-				TKey[] keys = this.Keys.ToArray();
-				foreach (TKey k in keys)
-					this.source.Remove(k);
+				var keys = this.Keys.ToArray();
+				foreach (var k in keys)
+					this._source.Remove(k);
 			}
 
 			public bool Contains(KeyValuePair<TKey, TValue> item)
 			{
-				return predicate(item.Value) && this.source.Contains(item);
+				return this._predicate(item.Value) && this._source.Contains(item);
 			}
 
 			public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
 			{
-				KeyValuePair<TKey, TValue>[] items = this.source.Where(kvpsel).ToArray();
+				var items = this._source.Where(this.ValuePredicate).ToArray();
 				items.CopyTo(array, arrayIndex);
 			}
 
 			public bool Remove(KeyValuePair<TKey, TValue> item)
 			{
-				return predicate(item.Value) && this.source.Remove(item);
+				return this._predicate(item.Value) && this._source.Remove(item);
 			}
 
 			public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 			{
-				return this.source.Where(kvpsel).GetEnumerator();
+				return this._source.Where(this.ValuePredicate).GetEnumerator();
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -783,14 +782,14 @@ namespace ExtendedSystem
 
 		internal class SelectValueDictionary<TKey, TSource, TResult> : IDictionary<TKey, TResult>
 		{
-			internal IDictionary<TKey, TSource> source;
-			internal Func<TSource, TResult> selector;
+			internal IDictionary<TKey, TSource> _source;
+			internal Func<TSource, TResult> _selector;
 
 			public ICollection<TKey> Keys
 			{
 				get
 				{
-					return this.source.Keys;
+					return this._source.Keys;
 				}
 			}
 
@@ -798,7 +797,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.Values.Select(selector).AsCollection();
+					return this._source.Values.Select(this._selector).AsCollection();
 				}
 			}
 
@@ -806,7 +805,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.source.Count;
+					return this._source.Count;
 				}
 			}
 
@@ -822,7 +821,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return selector(this.source[key]);
+					return this._selector(this._source[key]);
 				}
 
 				set
@@ -833,7 +832,7 @@ namespace ExtendedSystem
 
 			public bool ContainsKey(TKey key)
 			{
-				return this.source.ContainsKey(key);
+				return this._source.ContainsKey(key);
 			}
 
 			public void Add(TKey key, TResult value)
@@ -848,10 +847,9 @@ namespace ExtendedSystem
 
 			public bool TryGetValue(TKey key, out TResult value)
 			{
-				TSource v;
-				if (this.source.TryGetValue(key, out v))
+				if (this._source.TryGetValue(key, out var v))
 				{
-					value = selector(v);
+					value = this._selector(v);
 					return true;
 				}
 				else
@@ -873,17 +871,17 @@ namespace ExtendedSystem
 
 			public bool Contains(KeyValuePair<TKey, TResult> item)
 			{
-				return this.source.ContainsKey(item.Key) && Object.Equals(item.Value, selector(this.source[item.Key]));
+				return this._source.ContainsKey(item.Key) && Equals(item.Value, this._selector(this._source[item.Key]));
 			}
 
 			public void CopyTo(KeyValuePair<TKey, TResult>[] array, int arrayIndex)
 			{
 				if (array == null)
 					throw new ArgumentNullException("array");
-				KeyValuePair<TKey, TSource>[] temp = new KeyValuePair<TKey, TSource>[array.Length];
-				this.source.CopyTo(temp, arrayIndex);
+				var temp = new KeyValuePair<TKey, TSource>[array.Length];
+				this._source.CopyTo(temp, arrayIndex);
 				for (int i = arrayIndex; i < array.Length; ++i)
-					array[i] = new KeyValuePair<TKey, TResult>(temp[i].Key, selector(temp[i].Value));
+					array[i] = new KeyValuePair<TKey, TResult>(temp[i].Key, this._selector(temp[i].Value));
 			}
 
 			public bool Remove(KeyValuePair<TKey, TResult> item)
@@ -893,7 +891,7 @@ namespace ExtendedSystem
 
 			public IEnumerator<KeyValuePair<TKey, TResult>> GetEnumerator()
 			{
-				return this.source.Select((kvp) => new KeyValuePair<TKey, TResult>(kvp.Key, selector(kvp.Value))).GetEnumerator();
+				return this._source.Select((kvp) => new KeyValuePair<TKey, TResult>(kvp.Key, this._selector(kvp.Value))).GetEnumerator();
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -904,7 +902,7 @@ namespace ExtendedSystem
 
 		public static IDictionary<TKey, TResult> CastValues<TKey, TSource, TResult>(this IDictionary<TKey, TSource> dictionary)
 		{
-			return new SelectValueDictionary<TKey, TSource, TResult>() { source = dictionary, selector = (v) => (TResult)((object)v) };
+			return new SelectValueDictionary<TKey, TSource, TResult>() { _source = dictionary, _selector = (v) => (TResult)((object)v) };
 		}
 
 		public static bool ContainsValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TValue value)
@@ -914,20 +912,20 @@ namespace ExtendedSystem
 
 		public static IDictionary<TKey, TValue> ExceptKeys<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<TKey> keys)
 		{
-			return new WhereKeyDictionary<TKey, TValue>() { source = dictionary, predicate = (k) => !keys.Contains(k) };
+			return new WhereKeyDictionary<TKey, TValue>() { _source = dictionary, _predicate = (k) => !keys.Contains(k) };
 		}
 
 		internal class JoinDictionary<TKey, TOuter, TInner, TResult> : IDictionary<TKey, TResult>
 		{
-			internal IDictionary<TKey, TOuter> outer;
-			internal IDictionary<TKey, TInner> inner;
-			internal Func<TOuter, TInner, TResult> selector;
+			internal IDictionary<TKey, TOuter> _outer;
+			internal IDictionary<TKey, TInner> _inner;
+			internal Func<TOuter, TInner, TResult> _selector;
 
 			public ICollection<TKey> Keys
 			{
 				get
 				{
-					return this.outer.Keys.Intersect(this.inner.Keys).AsCollection();
+					return this._outer.Keys.Intersect(this._inner.Keys).AsCollection();
 				}
 			}
 
@@ -935,7 +933,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return this.Keys.Select((k) => selector(this.outer[k], this.inner[k])).AsCollection();
+					return this.Keys.Select((k) => this._selector(this._outer[k], this._inner[k])).AsCollection();
 				}
 			}
 
@@ -959,7 +957,7 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return selector(this.outer[key], this.inner[key]);
+					return this._selector(this._outer[key], this._inner[key]);
 				}
 
 				set
@@ -970,7 +968,7 @@ namespace ExtendedSystem
 
 			public bool ContainsKey(TKey key)
 			{
-				return this.outer.ContainsKey(key) && this.inner.ContainsKey(key);
+				return this._outer.ContainsKey(key) && this._inner.ContainsKey(key);
 			}
 
 			public void Add(TKey key, TResult value)
@@ -985,11 +983,9 @@ namespace ExtendedSystem
 
 			public bool TryGetValue(TKey key, out TResult value)
 			{
-				TOuter v1;
-				TInner v2;
-				if (this.outer.TryGetValue(key, out v1) && this.inner.TryGetValue(key, out v2))
+				if (this._outer.TryGetValue(key, out var v1) && this._inner.TryGetValue(key, out var v2))
 				{
-					value = selector(v1, v2);
+					value = this._selector(v1, v2);
 					return true;
 				}
 				else
@@ -1011,7 +1007,7 @@ namespace ExtendedSystem
 
 			public bool Contains(KeyValuePair<TKey, TResult> item)
 			{
-				return this.outer.ContainsKey(item.Key) && this.inner.ContainsKey(item.Key) && Object.Equals(item.Value, selector(this.outer[item.Key], this.inner[item.Key]));
+				return this._outer.ContainsKey(item.Key) && this._inner.ContainsKey(item.Key) && Equals(item.Value, this._selector(this._outer[item.Key], this._inner[item.Key]));
 			}
 
 			public void CopyTo(KeyValuePair<TKey, TResult>[] array, int arrayIndex)
@@ -1040,7 +1036,7 @@ namespace ExtendedSystem
 
 		public static IDictionary<TKey, TResult> Join<TKey, TValue1, TValue2, TResult>(this IDictionary<TKey, TValue1> outer, IDictionary<TKey, TValue2> inner, Func<TValue1, TValue2, TResult> resultSelector)
 		{
-			return new JoinDictionary<TKey, TValue1, TValue2, TResult>() { outer = outer, inner = inner, selector = resultSelector };
+			return new JoinDictionary<TKey, TValue1, TValue2, TResult>() { _outer = outer, _inner = inner, _selector = resultSelector };
 		}
 
 		public static IDictionary<TKey, TResult> OfTypeValues<TKey, TSource, TResult>(this IDictionary<TKey, TSource> dictionary)
@@ -1050,17 +1046,17 @@ namespace ExtendedSystem
 
 		public static IDictionary<TKey, TResult> SelectValues<TKey, TSource, TResult>(this IDictionary<TKey, TSource> dictionary, Func<TSource, TResult> selector)
 		{
-			return new SelectValueDictionary<TKey, TSource, TResult>() { source = dictionary, selector = selector };
+			return new SelectValueDictionary<TKey, TSource, TResult>() { _source = dictionary, _selector = selector };
 		}
 
 		public static IDictionary<TKey, TValue> WhereKeys<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, Func<TKey, bool> predicate)
 		{
-			return new WhereKeyDictionary<TKey, TValue>() { source = dictionary, predicate = predicate };
+			return new WhereKeyDictionary<TKey, TValue>() { _source = dictionary, _predicate = predicate };
 		}
 
 		public static IDictionary<TKey, TValue> WhereValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, Func<TValue, bool> predicate)
 		{
-			return new WhereValueDictionary<TKey, TValue>() { source = dictionary, predicate = predicate };
+			return new WhereValueDictionary<TKey, TValue>() { _source = dictionary, _predicate = predicate };
 		}
 	}
 }

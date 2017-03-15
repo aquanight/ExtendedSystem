@@ -9,13 +9,13 @@ namespace ExtendedSystem
 	{
 		internal class EnumerableCollection<T> : ICollection<T>
 		{
-			internal IEnumerable<T> wrapped;
+			internal IEnumerable<T> _wrapped;
 
 			public int Count
 			{
 				get
 				{
-					return wrapped.Count();
+					return this._wrapped.Count();
 				}
 			}
 
@@ -39,14 +39,14 @@ namespace ExtendedSystem
 
 			public bool Contains(T item)
 			{
-				return wrapped.Any((o) => o.Equals(item));
+				return this._wrapped.Any((o) => o.Equals(item));
 			}
 
 			public void CopyTo(T[] array, int arrayIndex)
 			{
 				if (array == null)
 					throw new ArgumentNullException("array");
-				foreach (T o in wrapped)
+				foreach (var o in this._wrapped)
 				{
 					if (arrayIndex < array.Length)
 						array[arrayIndex++] = o;
@@ -57,7 +57,7 @@ namespace ExtendedSystem
 
 			public IEnumerator<T> GetEnumerator()
 			{
-				return wrapped.GetEnumerator();
+				return this._wrapped.GetEnumerator();
 			}
 
 			public bool Remove(T item)
@@ -67,7 +67,7 @@ namespace ExtendedSystem
 
 			IEnumerator IEnumerable.GetEnumerator()
 			{
-				return wrapped.GetEnumerator();
+				return this._wrapped.GetEnumerator();
 			}
 		}
 
@@ -86,7 +86,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public static ICollection<T> AsCollection<T>(this IEnumerable<T> enumerable)
 		{
-			return (enumerable as ICollection<T>) ?? new EnumerableCollection<T> { wrapped = enumerable };
+			return (enumerable as ICollection<T>) ?? new EnumerableCollection<T> { _wrapped = enumerable };
 		}
 
 		public static void CopyTo<T>(this IEnumerable<T> enumerable, T[] array, int arrayIndex)
@@ -95,7 +95,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException("enumerable");
 			if (array == null)
 				throw new ArgumentNullException("array");
-			foreach (T o in enumerable)
+			foreach (var o in enumerable)
 			{
 				if (arrayIndex < array.Length)
 					array[arrayIndex++] = o;
@@ -185,7 +185,7 @@ namespace ExtendedSystem
 			var e = enumerable.GetEnumerator();
 			while (e.MoveNext())
 			{
-				T val = e.Current;
+				var val = e.Current;
 				if (predicate(val))
 					return val;
 			}
@@ -363,7 +363,7 @@ namespace ExtendedSystem
 		{
 			if (array == null)
 				throw new ArgumentNullException(nameof(array));
-			T[] newary = new T[array.Length + 1];
+			var newary = new T[array.Length + 1];
 			array.CopyTo(newary, 0);
 			newary[array.Length] = item;
 			return newary;
@@ -375,7 +375,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(array));
 			if (items == null)
 				throw new ArgumentNullException(nameof(items));
-			T[] newary = new T[array.Length + items.Count];
+			var newary = new T[array.Length + items.Count];
 			array.CopyTo(newary, 0);
 			items.CopyTo(newary, array.Length);
 			return newary;
@@ -419,8 +419,8 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(source));
 			if (!source.All((r) => r.Success))
 			{
-				TException[] e = source.Where((r) => !r.Success).Select((r) => r.GetException()).ToArray();
-				AggregateException ae = new AggregateException(e);
+				var e = source.Where((r) => !r.Success).Select((r) => r.GetException()).ToArray();
+				var ae = new AggregateException(e);
 				throw ae;
 			}
 			return source.Select((r) => r.Assert());

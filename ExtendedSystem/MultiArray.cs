@@ -33,14 +33,14 @@ namespace ExtendedSystem
 				return !type2.IsArray;
 			if (type1.GetArrayRank() != type2.GetArrayRank())
 				return false;
-			return Reflect.gtd_ienum.MakeGenericType(type1.GetElementType()).IsAssignableFrom(type1) == Reflect.gtd_ienum.MakeGenericType(type2.GetElementType()).IsAssignableFrom(type2);
+			return Reflect._gtd_ienum.MakeGenericType(type1.GetElementType()).IsAssignableFrom(type1) == Reflect._gtd_ienum.MakeGenericType(type2.GetElementType()).IsAssignableFrom(type2);
 		}
 
 		public static bool IsSZArray(Type arrayType)
 		{
 			if (arrayType == null)
 				throw new ArgumentNullException(nameof(arrayType));
-			return arrayType.IsArray && arrayType.GetArrayRank() == 1 && Reflect.gtd_ienum.MakeGenericType(arrayType.GetElementType()).IsAssignableFrom(arrayType);
+			return arrayType.IsArray && arrayType.GetArrayRank() == 1 && Reflect._gtd_ienum.MakeGenericType(arrayType.GetElementType()).IsAssignableFrom(arrayType);
 		}
 
 		/// <summary>
@@ -162,7 +162,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(offset));
 			if (index.Length != offset.Length)
 				throw new ArgumentException("index and offset must be same length");
-			int[] result = index.Duplicate();
+			var result = index.Duplicate();
 			for (int i = 0; i < result.Length; ++i)
 				result[i] += offset[i];
 			return result;
@@ -176,7 +176,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(length));
 			if (index.Length != length.Length)
 				throw new ArgumentException("index and length must be same length");
-			int[] factors = new int[length.Length + 1];
+			var factors = new int[length.Length + 1];
 			factors[length.Length] = 1;
 			for (int i = factors.Length - 1; i >= 0; --i)
 			{
@@ -186,7 +186,7 @@ namespace ExtendedSystem
 			}
 			for (int ix = 0; ix < factors[0]; ++ix)
 			{
-				int[] pos = index.Duplicate();
+				var pos = index.Duplicate();
 				for (int r = 0; r < pos.Length; ++r)
 				{
 					pos[r] += (ix % factors[r]) / factors[r + 1];
@@ -199,8 +199,8 @@ namespace ExtendedSystem
 		{
 			if (array == null)
 				throw new ArgumentNullException(nameof(array));
-			int[] pos = Enumerable.Range(0, array.Rank).Select((r) => array.GetLowerBound(r)).ToArray();
-			int[] len = Enumerable.Range(0, array.Rank).Select((r) => array.GetLength(r)).ToArray();
+			var pos = Enumerable.Range(0, array.Rank).Select((r) => array.GetLowerBound(r)).ToArray();
+			var len = Enumerable.Range(0, array.Rank).Select((r) => array.GetLength(r)).ToArray();
 			return EnumeratePositions(pos, len);
 		}
 
@@ -285,7 +285,7 @@ namespace ExtendedSystem
 		{
 			CheckBounds(array, index);
 			int pos = 0;
-			int[] factors = new int[array.Rank];
+			var factors = new int[array.Rank];
 			factors[factors.Length - 1] = 1;
 			for (int i = factors.Length - 1; i >= 0; --i)
 			{
@@ -323,7 +323,7 @@ namespace ExtendedSystem
 		public static void Clear(Array array, int[] index, int[] length)
 		{
 			CheckBounds(array, index, length);
-			int[] fl = length.Duplicate();
+			var fl = length.Duplicate();
 			int rl = length[length.Length - 1];
 			fl[fl.Length - 1] = 1;
 			foreach (var pos in EnumeratePositions(index, fl))
@@ -392,14 +392,14 @@ namespace ExtendedSystem
 				throw new RankException();
 			CheckBounds(sourceArray, sourceIndex, length);
 			CheckBounds(destinationArray, destinationIndex, length);
-			Array tmp = Array.CreateInstance(destinationArray.GetType().GetElementType(), length);
-			int[] zero = new int[length.Length];
-			int[] fl = length.Duplicate();
+			var tmp = Array.CreateInstance(destinationArray.GetType().GetElementType(), length);
+			var zero = new int[length.Length];
+			var fl = length.Duplicate();
 			int rl = length[length.Length - 1];
 			fl[fl.Length - 1] = 1;
 			foreach (var pos in EnumeratePositions(zero, fl))
 			{
-				int[] srcpos = PositionAdd(sourceIndex, pos);
+				var srcpos = PositionAdd(sourceIndex, pos);
 				int srcvix = GetVectorIndex(sourceArray, srcpos);
 				int dstvix = GetVectorIndex(tmp, pos);
 				Array.Copy(sourceArray, srcvix, tmp, dstvix, rl);
@@ -407,7 +407,7 @@ namespace ExtendedSystem
 			// Initial copy successful, transplant to target array.
 			foreach (var pos in EnumeratePositions(zero, fl))
 			{
-				int[] dstpos = PositionAdd(destinationIndex, pos);
+				var dstpos = PositionAdd(destinationIndex, pos);
 				int srcvix = GetVectorIndex(tmp, pos);
 				int dstvix = GetVectorIndex(destinationArray, dstpos);
 				Array.Copy(tmp, srcvix, destinationArray, dstvix, rl);
@@ -426,7 +426,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(destinationArray));
 			CheckBounds(sourceArray, sourceRow, sourceColumn, numRows, numColumns);
 			CheckBounds(destinationArray, destinationRow, destinationColumn, numRows, numColumns);
-			TDestination[,] tmp = new TDestination[numRows, numColumns];
+			var tmp = new TDestination[numRows, numColumns];
 			for (int ir = 0; ir < numRows; ++ir)
 			{
 				int srcvix = GetVectorIndex(sourceArray, sourceRow + ir, sourceColumn);
@@ -455,7 +455,7 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(destinationArray));
 			CheckBounds(sourceArray, sourceX, sourceY, sourceZ, dx, dy, dz);
 			CheckBounds(destinationArray, destinationX, destinationY, destinationZ, dx, dy, dz);
-			TDestination[,,] tmp = new TDestination[dx, dy, dz];
+			var tmp = new TDestination[dx, dy, dz];
 			for (int ix = 0; ix < dx; ++ix)
 				for (int iy = 0; iy < dy; ++iy)
 				{
@@ -486,7 +486,7 @@ namespace ExtendedSystem
 		{
 			if (rank < 1)
 				throw new ArgumentOutOfRangeException("rank", "rank must be postive");
-			int[] length = new int[rank];
+			var length = new int[rank];
 			return Array.CreateInstance(typeof(T), length);
 		}
 
@@ -594,8 +594,8 @@ namespace ExtendedSystem
 		{
 			if (array == null)
 				return null;
-			Type et = array.GetType().GetElementType();
-			Array dstary = Array.CreateInstance(et, array.Length);
+			var et = array.GetType().GetElementType();
+			var dstary = Array.CreateInstance(et, array.Length);
 			int oi = 0;
 			foreach (object var in array)
 			{
@@ -634,8 +634,8 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(size), "size must be positive");
 			int osz = array.GetLength(0);
 			int olb = array.GetLowerBound(0);
-			int[] lbs = new int[array.Rank + 1];
-			int[] lens = new int[array.Rank + 1];
+			var lbs = new int[array.Rank + 1];
+			var lens = new int[array.Rank + 1];
 			lbs[0] = 0;
 			for (int r = 0; r < array.Rank; ++r)
 			{
@@ -644,10 +644,10 @@ namespace ExtendedSystem
 			}
 			lens[0] = osz / size + (osz % size > 0 ? 1 : 0);
 			lens[1] = size;
-			Array result = Array.CreateInstance(array.GetType().GetElementType(), lens, lbs);
-			foreach (int[] pos in EnumeratePositions(array))
+			var result = Array.CreateInstance(array.GetType().GetElementType(), lens, lbs);
+			foreach (var pos in EnumeratePositions(array))
 			{
-				int[] dstpos = new int[result.Rank];
+				var dstpos = new int[result.Rank];
 				Array.Copy(pos, 1, dstpos, 2, result.Rank - 1);
 				int oldoff = pos[0] - olb;
 				dstpos[0] = oldoff / size;
@@ -675,8 +675,8 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(array));
 			if (array.Rank < 2)
 				throw new RankException();
-			int[] lbs = new int[array.Rank - 1];
-			int[] lns = new int[array.Rank - 1];
+			var lbs = new int[array.Rank - 1];
+			var lns = new int[array.Rank - 1];
 			for (int r = 2; r < array.Rank; ++r)
 			{
 				lbs[r - 1] = array.GetLowerBound(r);
@@ -687,10 +687,10 @@ namespace ExtendedSystem
 			int oln1 = array.GetLength(1);
 			lbs[0] = array.GetLowerBound(0) * array.GetLowerBound(1);
 			lns[0] = array.GetLength(0) * array.GetLength(1);
-			Array result = Array.CreateInstance(array.GetType().GetElementType(), lns, lbs);
-			foreach (int[] pos in EnumeratePositions(array))
+			var result = Array.CreateInstance(array.GetType().GetElementType(), lns, lbs);
+			foreach (var pos in EnumeratePositions(array))
 			{
-				int[] dstpos = new int[result.Rank];
+				var dstpos = new int[result.Rank];
 				Array.Copy(pos, 2, dstpos, 1, dstpos.Length);
 				dstpos[0] = ((pos[0] - olb0) * oln1) + (pos[1] - olb1) + lbs[0];
 				result.SetValue(array.GetValue(pos), dstpos);
@@ -726,12 +726,12 @@ namespace ExtendedSystem
 				throw new RankException();
 			if (newLengths.Any((l) => l < 0))
 				throw new ArgumentOutOfRangeException(nameof(newLengths), "A negative length cannot be supplied");
-			Array newAry = Array.CreateInstance(typeof(T).GetElementType(), newLengths, newLowerBounds);
+			var newAry = Array.CreateInstance(typeof(T).GetElementType(), newLengths, newLowerBounds);
 			if (array == null)
 				goto SkipCopy;
-			Array ary = (Array)(object)array;
-			int[] copyPos = new int[newLowerBounds.Length];
-			int[] copyLen = new int[newLengths.Length];
+			var ary = (Array)(object)array;
+			var copyPos = new int[newLowerBounds.Length];
+			var copyLen = new int[newLengths.Length];
 			for (int i = 0; i < newLengths.Length; ++i)
 			{
 				copyPos[i] = Math.Max(ary.GetLowerBound(i), newLowerBounds[i]);
@@ -752,7 +752,7 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(newColumns), "A negative length cannot be supplied");
 			int lr = array?.GetLowerBound(0) ?? 0;
 			int lc = array?.GetLowerBound(1) ?? 0;
-			T[,] newAry = (T[,])Array.CreateInstance(typeof(T), new int[] { newRows, newColumns }, new int[] { lr, lc });
+			var newAry = (T[,])Array.CreateInstance(typeof(T), new int[] { newRows, newColumns }, new int[] { lr, lc });
 			if (array == null)
 				goto SkipCopy;
 			int copyRows = Math.Min(newRows, array.GetLength(0));
@@ -781,7 +781,7 @@ namespace ExtendedSystem
 			int lx = array?.GetLowerBound(0) ?? 0;
 			int ly = array?.GetLowerBound(1) ?? 0;
 			int lz = array?.GetLowerBound(2) ?? 0;
-			T[,,] newAry = (T[,,])Array.CreateInstance(typeof(T), new int[] { newDx, newDy, newDz }, new int[] { lx, ly, lz });
+			var newAry = (T[,,])Array.CreateInstance(typeof(T), new int[] { newDx, newDy, newDz }, new int[] { lx, ly, lz });
 			if (array == null)
 				goto SkipCopy;
 			int copyX = Math.Min(newDx, array.GetLength(0));
@@ -800,7 +800,7 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(newRows), "A negative length cannot be supplied");
 			if (newColumns < 0)
 				throw new ArgumentOutOfRangeException(nameof(newColumns), "A negative length cannot be supplied");
-			T[,] newAry = (T[,])Array.CreateInstance(typeof(T), new int[] { newRows, newColumns }, new int[] { newStartRow, newStartColumn });
+			var newAry = (T[,])Array.CreateInstance(typeof(T), new int[] { newRows, newColumns }, new int[] { newStartRow, newStartColumn });
 			if (array == null)
 				goto SkipCopy;
 			int lr = Math.Max(array.GetLowerBound(0), newStartRow);
@@ -828,7 +828,7 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(newDy), "A negative length cannot be supplied");
 			if (newDz < 0)
 				throw new ArgumentOutOfRangeException(nameof(newDz), "A negative length cannot be supplied");
-			T[,,] newAry = (T[,,])Array.CreateInstance(typeof(T), new int[] { newDx, newDy, newDz }, new int[] { newStartX, newStartY, newStartZ });
+			var newAry = (T[,,])Array.CreateInstance(typeof(T), new int[] { newDx, newDy, newDz }, new int[] { newStartX, newStartY, newStartZ });
 			if (array == null)
 				goto SkipCopy;
 			int lx = Math.Max(array.GetLowerBound(0), newStartX);
@@ -871,11 +871,11 @@ namespace ExtendedSystem
 				throw new ArgumentNullException(nameof(array));
 			if (newElementType == null)
 				throw new ArgumentNullException(nameof(newElementType));
-			Type et = typeof(T).GetElementType();
+			var et = typeof(T).GetElementType();
 			if (!et.IsAssignableFrom(newElementType))
 				throw new InvalidCastException("The new element type is not assignable to the static array type");
-			Type ret = array.GetType().GetElementType();
-			Array srcAry = (Array)(object)(array);
+			var ret = array.GetType().GetElementType();
+			var srcAry = (Array)(object)(array);
 			Array dstAry;
 			if (ret.Equals(newElementType))
 				dstAry = srcAry.Duplicate();
@@ -900,8 +900,8 @@ namespace ExtendedSystem
 				}
 				else
 				{
-					int[] lbds = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLowerBound(r)).ToArray();
-					int[] lens = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLength(r)).ToArray();
+					var lbds = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLowerBound(r)).ToArray();
+					var lens = Enumerable.Range(0, srcAry.Rank).Select((r) => srcAry.GetLength(r)).ToArray();
 					dstAry = Array.CreateInstance(newElementType, lens, lbds);
 					ConstrainedCopy(srcAry, lbds, dstAry, lbds, lens); // ConstrainedCopy handles all the type-checking.
 				}

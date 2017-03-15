@@ -15,13 +15,13 @@ namespace ExtendedSystem.Tests
 		public void AsNullableTest()
 		{
 			Result<int, Exception> r1 = 42;
-			int? n1 = r1.AsNullable();
+			var n1 = r1.AsNullable();
 			Assert.IsTrue(n1.HasValue);
-			Result<int, Exception> r2 = ((Func<int>)(() =>
+			var r2 = ((Func<int>)(() =>
 			{
 				throw new Exception();
 			})).TryInvoke();
-			int? n2 = r2.AsNullable();
+			var n2 = r2.AsNullable();
 			Assert.IsFalse(n2.HasValue);
 		}
 	}

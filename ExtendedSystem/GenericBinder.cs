@@ -14,7 +14,7 @@ namespace ExtendedSystem
 	public class GenericBinder : Binder
 	{
 		// Helper object to do the heavy lifiting after generic instantiation.
-		private static Binder stdbind = Type.DefaultBinder;
+		private static Binder _stdbind = Type.DefaultBinder;
 
 		public override FieldInfo BindToField(BindingFlags bindingAttr, FieldInfo[] match, object value, CultureInfo culture)
 		{
@@ -42,29 +42,29 @@ namespace ExtendedSystem
 				throw new ArgumentNullException("match");
 			if (types == null)
 				throw new ArgumentNullException("types");
-			MethodBase[] methods = match.Duplicate();
+			var methods = match.Duplicate();
 			int ix;
 			while ((ix = Array.FindIndex(methods, (m) => m.IsGenericMethodDefinition)) >= 0)
 			{
-				MethodInfo m = methods[ix] as MethodInfo;
+				var m = methods[ix] as MethodInfo;
 				if (m == null)
 				{
 					methods[ix] = null;
 					continue;
 				}
-				Type[] consideration = types.Duplicate();
+				var consideration = types.Duplicate();
 				m = m.InferGenericMethod(consideration);
 				methods[ix] = m;
 			}
 			// Remove the unsuitables entirely:
 			methods = methods.Where((m) => (m != null)).ToArray();
-			return stdbind.SelectMethod(bindingAttr, methods, types, modifiers);
+			return _stdbind.SelectMethod(bindingAttr, methods, types, modifiers);
 		}
 
 		public override PropertyInfo SelectProperty(BindingFlags bindingAttr, PropertyInfo[] match, Type returnType, Type[] indexes, ParameterModifier[] modifiers)
 		{
 			// Properties cannot be generic.
-			return stdbind.SelectProperty(bindingAttr, match, returnType, indexes, modifiers);
+			return _stdbind.SelectProperty(bindingAttr, match, returnType, indexes, modifiers);
 		}
 	}
 }

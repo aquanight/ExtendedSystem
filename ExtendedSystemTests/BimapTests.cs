@@ -15,7 +15,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void RehashTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -40,18 +40,18 @@ namespace ExtendedSystem.Tests
 		public void BimapTest()
 		{
 			// Test the default constructor
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			// Test the capacity constructor
 			map = new Bimap<int, char>(44);
 			Assert.IsTrue(map.Capacity >= 44);
 			// Test the comparer constructor
-			CustomComparer<int> intCmp = new CustomComparer<int>();
-			CustomComparer<char> chrCmp = new CustomComparer<char>();
+			var intCmp = new CustomComparer<int>();
+			var chrCmp = new CustomComparer<char>();
 			map = new Bimap<int, char>(intCmp, chrCmp);
 			Assert.AreSame(intCmp, map.LeftComparer);
 			Assert.AreSame(chrCmp, map.RightComparer);
 			// Test the dictionary constructor
-			Dictionary<int, char> srcDict = new Dictionary<int, char>();
+			var srcDict = new Dictionary<int, char>();
 			srcDict.Add(65, 'a');
 			srcDict.Add(97, 'q');
 			srcDict.Add(-44, 'x');
@@ -62,7 +62,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void AddTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -73,7 +73,7 @@ namespace ExtendedSystem.Tests
 		[ExpectedException(typeof(ArgumentException), AllowDerivedTypes = false)]
 		public void AddTest1()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(65, 'a');
 		}
@@ -81,8 +81,8 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void AddRangeTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
-			Dictionary<int, char> srcDict = new Dictionary<int, char>();
+			var map = new Bimap<int, char>();
+			var srcDict = new Dictionary<int, char>();
 			srcDict.Add(65, 'a');
 			srcDict.Add(97, 'q');
 			srcDict.Add(-44, 'x');
@@ -95,14 +95,14 @@ namespace ExtendedSystem.Tests
 		public void AddRangeTest1()
 		{
 			KeyPair<int, char>[] src = { new KeyPair<int, char>(65, 'a'), new KeyPair<int, char>(65, 'a') };
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.AddRange(src);
 		}
 
 		[TestMethod()]
 		public void ClearTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -115,7 +115,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void ContainsTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -130,7 +130,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void ContainsKeyTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -149,11 +149,11 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void CopyToTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
-			KeyPair<int, char>[] array = new KeyPair<int, char>[map.Count];
+			var array = new KeyPair<int, char>[map.Count];
 			map.CopyTo(array, 0);
 			Assert.IsTrue(array.Any((kp) => kp.Left == 65));
 			Assert.IsTrue(array.Any((kp) => kp.Left == 97));
@@ -170,7 +170,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void GetEnumeratorTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -185,7 +185,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void RemoveTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -212,15 +212,13 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void TryGetValueTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
-			int l;
-			char r;
-			Assert.IsTrue(map.TryGetValue(65, out r));
+			Assert.IsTrue(map.TryGetValue(65, out char r));
 			Assert.AreEqual('a', r);
-			Assert.IsTrue(map.TryGetValue('x', out l));
+			Assert.IsTrue(map.TryGetValue('x', out int l));
 			Assert.AreEqual(-44, l);
 			Assert.IsFalse(map.TryGetValue(99, out r));
 			Assert.AreEqual(default(char), r);
@@ -231,7 +229,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void GetValueTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -247,7 +245,7 @@ namespace ExtendedSystem.Tests
 		[ExpectedException(typeof(KeyNotFoundException), AllowDerivedTypes = false)]
 		public void GetBadValueTest()
 		{
-			Bimap<int, char> map = new Bimap<int, char>();
+			var map = new Bimap<int, char>();
 			map.Add(new KeyPair<int, char>(65, 'a'));
 			map.Add(97, 'q');
 			map.Add(-44, 'x');
@@ -271,10 +269,10 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void LoadTest()
 		{
-			Random rng = new Random();
+			var rng = new Random();
 			Func<int> intGen = () =>
 			{
-				byte[] b = new byte[4];
+				var b = new byte[4];
 				rng.NextBytes(b);
 				return BitConverter.ToInt32(b, 0);
 			};
@@ -284,8 +282,8 @@ namespace ExtendedSystem.Tests
 				return new string(Enumerable.Range(0, len).Select((i) => (char)(rng.Next(0x20, 0x7F))).ToArray());
 			};
 
-			Stopwatch stpw = Stopwatch.StartNew();
-			Bimap<string, int> map = new Bimap<string, int>(1024);
+			var stpw = Stopwatch.StartNew();
+			var map = new Bimap<string, int>(1024);
 			Trace.TraceInformation("Map construction: {0} ms", stpw.SplitMilliseconds());
 			// Small load test.
 			while (map.Count < 1000)

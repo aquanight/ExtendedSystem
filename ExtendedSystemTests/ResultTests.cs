@@ -14,7 +14,7 @@ namespace ExtendedSystem.Tests
 		[TestMethod()]
 		public void SuccessAssertTest()
 		{
-			Result<int, Exception> r = new Result<int, Exception>(42);
+			var r = new Result<int, Exception>(42);
 			Assert.IsTrue(r.Success);
 			r.Assert(); // Should NOT throw an exception.
 		}
@@ -28,7 +28,7 @@ namespace ExtendedSystem.Tests
 		[ExpectedException(typeof(DivideByZeroException), "Assert() should throw the exception!", AllowDerivedTypes = false)]
 		public void FailedAssertTest()
 		{
-			Result<double, Exception> r = ((Func<double>)ThrowsAnException).TryInvoke();
+			var r = ((Func<double>)this.ThrowsAnException).TryInvoke();
 			Assert.IsFalse(r.Success);
 			r.Assert(); // Should throw DivideByZeroException
 		}
@@ -38,10 +38,9 @@ namespace ExtendedSystem.Tests
 		{
 			Result<double, Exception> r = 42;
 			Assert.IsTrue(r.Success);
-			double val;
-			Assert.IsTrue(r.TryGet(out val));
+			Assert.IsTrue(r.TryGet(out double val));
 			Assert.AreEqual(42, val);
-			r = ((Func<double>)ThrowsAnException).TryInvoke();
+			r = ((Func<double>)this.ThrowsAnException).TryInvoke();
 			Assert.IsFalse(r.Success);
 			Assert.IsFalse(r.TryGet(out val));
 			Assert.AreEqual(default(double), val);

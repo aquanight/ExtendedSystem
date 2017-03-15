@@ -23,22 +23,22 @@ namespace ExtendedSystem
 		// Use nullables so that we can use the entire hashcode.
 		private struct Entry
 		{
-			internal KeyPair<TLeft, TRight>? item; // null if this is a free entry
-			internal KeyPair<int, int> hash; // Invalid if !item.HasValue
+			internal KeyPair<TLeft, TRight>? _item; // null if this is a free entry
+			internal KeyPair<int, int> _hash; // Invalid if !item.HasValue
 							 // If this is a "free" entry, lnext == rnext
-			internal int lnext; // -1 if this is the last of the chain
-			internal int rnext; // -1 if this is the last of the chain
-			internal int lprev; // -1 if this is the first of the chain
-			internal int rprev; // -1 if this is the first of the chain
+			internal int _lnext; // -1 if this is the last of the chain
+			internal int _rnext; // -1 if this is the last of the chain
+			internal int _lprev; // -1 if this is the first of the chain
+			internal int _rprev; // -1 if this is the first of the chain
 		}
-		private Entry[] items;
-		private int[] lefthash; // Empty buckets contain -1
-		private int[] righthash;
-		private int version = 0;
-		private int freeIndex; // -1 : no free entries - next addition will force a reallocation
-		private int freeCount;
-		private IEqualityComparer<TLeft> leftcmp;
-		private IEqualityComparer<TRight> rightcmp;
+		private Entry[] _items;
+		private int[] _lefthash; // Empty buckets contain -1
+		private int[] _righthash;
+		private int _version = 0;
+		private int _freeIndex; // -1 : no free entries - next addition will force a reallocation
+		private int _freeCount;
+		private IEqualityComparer<TLeft> _leftcmp;
+		private IEqualityComparer<TRight> _rightcmp;
 
 		// Performs a reallocation of the entry set.
 		// A general condition is that items, lefthash, and righthash are all the same length.
@@ -53,13 +53,13 @@ namespace ExtendedSystem
 		private void Realloc(int desiredCapacity)
 		{
 			Entry[] newItems;
-			if (items != null && lefthash != null && righthash != null)
+			if (this._items != null && this._lefthash != null && this._righthash != null)
 			{
 				if (desiredCapacity < 16)
 					desiredCapacity = 16;
-				if (desiredCapacity < (items.Length - freeCount))
-					desiredCapacity = items.Length - freeCount;
-				if (desiredCapacity <= items.Length && desiredCapacity > items.Length / 2)
+				if (desiredCapacity < (this._items.Length - this._freeCount))
+					desiredCapacity = this._items.Length - this._freeCount;
+				if (desiredCapacity <= this._items.Length && desiredCapacity > this._items.Length / 2)
 					return;
 			}
 			// Reallocation is happening.
@@ -69,76 +69,76 @@ namespace ExtendedSystem
 			newItems = new Entry[targetSize];
 			int newFreeCt = targetSize;
 			int newFreeIx = 0;
-			if (items != null)
+			if (this._items != null)
 			{
-				for (int i = 0; i < items.Length; ++i)
+				for (int i = 0; i < this._items.Length; ++i)
 				{
-					if (!items[i].item.HasValue)
+					if (!this._items[i]._item.HasValue)
 						continue;
 					--newFreeCt;
-					newItems[newFreeIx] = items[i];
-					newItems[newFreeIx].lprev = newItems[newFreeIx].rprev = newItems[newFreeIx].lnext = newItems[newFreeIx].rnext = -1;
+					newItems[newFreeIx] = this._items[i];
+					newItems[newFreeIx]._lprev = newItems[newFreeIx]._rprev = newItems[newFreeIx]._lnext = newItems[newFreeIx]._rnext = -1;
 					newFreeIx++;
 				}
 			}
-			items = newItems;
-			freeCount = newFreeCt;
-			freeIndex = newFreeIx;
-			for (int i = newFreeIx; i < items.Length;)
+			this._items = newItems;
+			this._freeCount = newFreeCt;
+			this._freeIndex = newFreeIx;
+			for (int i = newFreeIx; i < this._items.Length;)
 			{
 				int j = i++;
-				items[j].rnext = items[j].lnext = (i < items.Length ? i : -1);
-				items[j].rprev = items[j].lprev = (j == newFreeIx ? -1 : j - 1);
+				this._items[j]._rnext = this._items[j]._lnext = (i < this._items.Length ? i : -1);
+				this._items[j]._rprev = this._items[j]._lprev = (j == newFreeIx ? -1 : j - 1);
 			}
-			lefthash = null;
-			righthash = null;
+			this._lefthash = null;
+			this._righthash = null;
 			Rehash(false);
 		}
 
 		public void Rehash(bool newHashes)
 		{
-			lefthash = new int[items.Length];
-			righthash = new int[items.Length];
-			lefthash.Fill(-1);
-			righthash.Fill(-1);
-			for (int i = 0; i < items.Length; ++i)
+			this._lefthash = new int[this._items.Length];
+			this._righthash = new int[this._items.Length];
+			this._lefthash.Fill(-1);
+			this._righthash.Fill(-1);
+			for (int i = 0; i < this._items.Length; ++i)
 			{
-				if (!items[i].item.HasValue)
+				if (!this._items[i]._item.HasValue)
 					continue;
-				int lh = items[i].hash.Left;
-				int rh = items[i].hash.Right;
+				int lh = this._items[i]._hash.Left;
+				int rh = this._items[i]._hash.Right;
 				if (newHashes)
 				{
-					var p = items[i].item.Value;
-					lh = leftcmp.GetHashCode(p.Left);
-					rh = rightcmp.GetHashCode(p.Right);
-					items[i].hash = new KeyPair<int, int>(lh, rh);
+					var p = this._items[i]._item.Value;
+					lh = this._leftcmp.GetHashCode(p.Left);
+					rh = this._rightcmp.GetHashCode(p.Right);
+					this._items[i]._hash = new KeyPair<int, int>(lh, rh);
 				}
-				int lhix = lefthash.GetFromHash(lh);
-				int rhix = righthash.GetFromHash(rh);
-				items[i].lprev = items[i].rprev = -1;
-				items[i].lnext = lhix;
+				int lhix = this._lefthash.GetFromHash(lh);
+				int rhix = this._righthash.GetFromHash(rh);
+				this._items[i]._lprev = this._items[i]._rprev = -1;
+				this._items[i]._lnext = lhix;
 				if (lhix >= 0)
-					items[lhix].lprev = i;
-				lefthash.SetFromHash(lh, i);
-				items[i].rnext = rhix;
+					this._items[lhix]._lprev = i;
+				this._lefthash.SetFromHash(lh, i);
+				this._items[i]._rnext = rhix;
 				if (rhix >= 0)
-					items[rhix].rprev = i;
-				righthash.SetFromHash(rh, i);
+					this._items[rhix]._rprev = i;
+				this._righthash.SetFromHash(rh, i);
 			}
 		}
 
 		private int FindLeft(TLeft key)
 		{
-			int hsh = leftcmp.GetHashCode(key);
-			int ix = lefthash.GetFromHash(hsh);
+			int hsh = this._leftcmp.GetHashCode(key);
+			int ix = this._lefthash.GetFromHash(hsh);
 			while (ix != -1)
 			{
-				Debug.Assert(items[ix].item.HasValue);
-				if (leftcmp.Equals(items[ix].item.Value.Left, key))
+				Debug.Assert(this._items[ix]._item.HasValue);
+				if (this._leftcmp.Equals(this._items[ix]._item.Value.Left, key))
 					return ix;
 				else
-					ix = items[ix].lnext;
+					ix = this._items[ix]._lnext;
 			}
 			return -1;
 		}
@@ -146,10 +146,10 @@ namespace ExtendedSystem
 		private int FindLeftNext(int ix)
 		{
 			int s;
-			for (s = ix; ix != -1; ix = items[ix].lnext)
+			for (s = ix; ix != -1; ix = this._items[ix]._lnext)
 			{
-				Debug.Assert(items[ix].item.HasValue);
-				if (leftcmp.Equals(items[ix].item.Value.Left, items[s].item.Value.Left))
+				Debug.Assert(this._items[ix]._item.HasValue);
+				if (this._leftcmp.Equals(this._items[ix]._item.Value.Left, this._items[s]._item.Value.Left))
 					return ix;
 			}
 			return -1;
@@ -157,15 +157,15 @@ namespace ExtendedSystem
 
 		private int FindRight(TRight key)
 		{
-			int hsh = rightcmp.GetHashCode(key);
-			int ix = righthash.GetFromHash(hsh);
+			int hsh = this._rightcmp.GetHashCode(key);
+			int ix = this._righthash.GetFromHash(hsh);
 			while (ix != -1)
 			{
-				Debug.Assert(items[ix].item.HasValue);
-				if (rightcmp.Equals(items[ix].item.Value.Right, key))
+				Debug.Assert(this._items[ix]._item.HasValue);
+				if (this._rightcmp.Equals(this._items[ix]._item.Value.Right, key))
 					return ix;
 				else
-					ix = items[ix].rnext;
+					ix = this._items[ix]._rnext;
 			}
 			return -1;
 		}
@@ -173,10 +173,10 @@ namespace ExtendedSystem
 		private int FindRightNext(int ix)
 		{
 			int s;
-			for (s = ix; ix != -1; ix = items[ix].rnext)
+			for (s = ix; ix != -1; ix = this._items[ix]._rnext)
 			{
-				Debug.Assert(items[ix].item.HasValue);
-				if (rightcmp.Equals(items[ix].item.Value.Right, items[s].item.Value.Right))
+				Debug.Assert(this._items[ix]._item.HasValue);
+				if (this._rightcmp.Equals(this._items[ix]._item.Value.Right, this._items[s]._item.Value.Right))
 					return ix;
 			}
 			return -1;
@@ -196,8 +196,8 @@ namespace ExtendedSystem
 
 		public Multibimap(int capacity, IEqualityComparer<TLeft> leftComparer, IEqualityComparer<TRight> rightComparer)
 		{
-			leftcmp = leftComparer;
-			rightcmp = rightComparer;
+			this._leftcmp = leftComparer;
+			this._rightcmp = rightComparer;
 			Realloc(capacity);
 		}
 
@@ -225,38 +225,38 @@ namespace ExtendedSystem
 
 		private void Unlink(int ix)
 		{
-			if (items[ix].lprev < 0)
+			if (this._items[ix]._lprev < 0)
 			{
-				int lh = items[ix].hash.Left;
-				Debug.Assert(lefthash.GetFromHash(lh) == ix);
-				lefthash.SetFromHash(lh, items[ix].lnext);
+				int lh = this._items[ix]._hash.Left;
+				Debug.Assert(this._lefthash.GetFromHash(lh) == ix);
+				this._lefthash.SetFromHash(lh, this._items[ix]._lnext);
 			}
 			else
 			{
-				items[items[ix].lprev].lnext = items[ix].lnext;
+				this._items[this._items[ix]._lprev]._lnext = this._items[ix]._lnext;
 			}
-			if (items[ix].lnext >= 0)
-				items[items[ix].lnext].lprev = items[ix].lprev;
-			if (items[ix].rprev < 0)
+			if (this._items[ix]._lnext >= 0)
+				this._items[this._items[ix]._lnext]._lprev = this._items[ix]._lprev;
+			if (this._items[ix]._rprev < 0)
 			{
-				int rh = items[ix].hash.Right;
-				Debug.Assert(righthash.GetFromHash(rh) == ix);
-				righthash.SetFromHash(rh, items[ix].rnext);
+				int rh = this._items[ix]._hash.Right;
+				Debug.Assert(this._righthash.GetFromHash(rh) == ix);
+				this._righthash.SetFromHash(rh, this._items[ix]._rnext);
 			}
 			else
 			{
-				items[items[ix].rprev].rnext = items[ix].rnext;
+				this._items[this._items[ix]._rprev]._rnext = this._items[ix]._rnext;
 			}
-			if (items[ix].rnext >= 0)
-				items[items[ix].rnext].rprev = items[ix].rprev;
-			items[ix].lnext = freeIndex;
-			items[ix].rnext = freeIndex;
-			items[ix].lprev = items[ix].rprev = -1;
-			items[ix].item = null;
-			items[freeIndex].lprev = ix;
-			items[freeIndex].rprev = ix;
-			freeIndex = ix;
-			++freeCount;
+			if (this._items[ix]._rnext >= 0)
+				this._items[this._items[ix]._rnext]._rprev = this._items[ix]._rprev;
+			this._items[ix]._lnext = this._freeIndex;
+			this._items[ix]._rnext = this._freeIndex;
+			this._items[ix]._lprev = this._items[ix]._rprev = -1;
+			this._items[ix]._item = null;
+			this._items[this._freeIndex]._lprev = ix;
+			this._items[this._freeIndex]._rprev = ix;
+			this._freeIndex = ix;
+			++this._freeCount;
 		}
 
 		private void Insert(TLeft left, TRight right)
@@ -265,31 +265,31 @@ namespace ExtendedSystem
 				throw new ArgumentNullException("left");
 			if (right == null)
 				throw new ArgumentNullException("right");
-			if (freeCount < 1)
-				Realloc(items.Length + 1);
-			int lh = leftcmp.GetHashCode(left);
-			int rh = rightcmp.GetHashCode(right);
-			int lhix = lefthash.GetFromHash(lh);
-			int rhix = righthash.GetFromHash(rh);
-			Debug.Assert(lhix < 0 || items[lhix].lprev == -1);
-			Debug.Assert(rhix < 0 || items[rhix].rprev == -1);
-			int ix = freeIndex;
-			freeIndex = items[ix].lnext;
-			items[ix].lprev = items[ix].rprev = -1;
-			if (freeIndex >= 0)
-				items[freeIndex].lprev = items[freeIndex].rprev = -1;
-			--freeCount;
-			items[ix].lnext = lhix;
+			if (this._freeCount < 1)
+				Realloc(this._items.Length + 1);
+			int lh = this._leftcmp.GetHashCode(left);
+			int rh = this._rightcmp.GetHashCode(right);
+			int lhix = this._lefthash.GetFromHash(lh);
+			int rhix = this._righthash.GetFromHash(rh);
+			Debug.Assert(lhix < 0 || this._items[lhix]._lprev == -1);
+			Debug.Assert(rhix < 0 || this._items[rhix]._rprev == -1);
+			int ix = this._freeIndex;
+			this._freeIndex = this._items[ix]._lnext;
+			this._items[ix]._lprev = this._items[ix]._rprev = -1;
+			if (this._freeIndex >= 0)
+				this._items[this._freeIndex]._lprev = this._items[this._freeIndex]._rprev = -1;
+			--this._freeCount;
+			this._items[ix]._lnext = lhix;
 			if (lhix >= 0)
-				items[lhix].lprev = ix;
-			items[ix].rnext = rhix;
+				this._items[lhix]._lprev = ix;
+			this._items[ix]._rnext = rhix;
 			if (rhix >= 0)
-				items[rhix].rprev = ix;
-			lefthash.SetFromHash(lh, ix);
-			righthash.SetFromHash(rh, ix);
-			items[ix].hash = new KeyPair<int, int>(lh, rh);
-			items[ix].item = new KeyPair<TLeft, TRight>(left, right);
-			++version;
+				this._items[rhix]._rprev = ix;
+			this._lefthash.SetFromHash(lh, ix);
+			this._righthash.SetFromHash(rh, ix);
+			this._items[ix]._hash = new KeyPair<int, int>(lh, rh);
+			this._items[ix]._item = new KeyPair<TLeft, TRight>(left, right);
+			++this._version;
 		}
 
 		TLeft IBimap<TLeft, TRight>.this[TRight key]
@@ -301,7 +301,7 @@ namespace ExtendedSystem
 					throw new KeyNotFoundException();
 				if (FindRightNext(ix) >= 0)
 					throw new InvalidOperationException("The key is not unique in this collection.");
-				return items[ix].item.Value.Left;
+				return this._items[ix]._item.Value.Left;
 			}
 
 			set
@@ -322,7 +322,7 @@ namespace ExtendedSystem
 					throw new KeyNotFoundException();
 				if (FindLeftNext(ix) >= 0)
 					throw new InvalidOperationException("The key is not unique in this collection.");
-				return items[ix].item.Value.Right;
+				return this._items[ix]._item.Value.Right;
 			}
 
 			set
@@ -338,7 +338,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return items.Length - freeCount;
+				return this._items.Length - this._freeCount;
 			}
 		}
 
@@ -352,23 +352,23 @@ namespace ExtendedSystem
 
 		internal class LeftCollection : ICollection<TLeft>
 		{
-			internal Multibimap<TLeft, TRight> instance;
-			internal bool useKey;
-			internal TRight key;
+			internal Multibimap<TLeft, TRight> _instance;
+			internal bool _useKey;
+			internal TRight _key;
 
 			public int Count
 			{
 				get
 				{
-					if (useKey)
-						return instance.Count;
+					if (this._useKey)
+						return this._instance.Count;
 					else
 					{
 
 						int ct = 0;
-						for (int ix = instance.FindRight(key); ix >= 0; ix = instance.FindRightNext(ix))
+						for (int ix = this._instance.FindRight(this._key); ix >= 0; ix = this._instance.FindRightNext(ix))
 						{
-							Debug.Assert(instance.items[ix].item.HasValue);
+							Debug.Assert(this._instance._items[ix]._item.HasValue);
 							++ct;
 						}
 						return ct;
@@ -380,76 +380,76 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return !useKey || instance.IsReadOnly;
+					return !this._useKey || this._instance.IsReadOnly;
 				}
 			}
 
 			public void Add(TLeft item)
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				Debug.Assert(useKey);
-				instance.Add(item, key);
+				Debug.Assert(this._useKey);
+				this._instance.Add(item, this._key);
 			}
 
 			public void Clear()
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				Debug.Assert(useKey);
-				instance.Remove(key);
+				Debug.Assert(this._useKey);
+				this._instance.Remove(this._key);
 			}
 
 			public bool Contains(TLeft item)
 			{
-				if (useKey)
-					return instance.Contains(item, key);
+				if (this._useKey)
+					return this._instance.Contains(item, this._key);
 				else
-					return instance.ContainsKey(item);
+					return this._instance.ContainsKey(item);
 			}
 
 			public void CopyTo(TLeft[] array, int arrayIndex)
 			{
 				if (array == null)
 					throw new ArgumentNullException("array");
-				if (array.Length - arrayIndex < Count)
+				if (array.Length - arrayIndex < this.Count)
 					throw new ArgumentException("Not enough space in array.");
-				if (useKey)
+				if (this._useKey)
 				{
-					for (int ix = instance.FindRight(key); ix >= 0; ix = instance.FindRightNext(ix))
-						array[arrayIndex++] = instance.items[ix].item.Value.Left;
+					for (int ix = this._instance.FindRight(this._key); ix >= 0; ix = this._instance.FindRightNext(ix))
+						array[arrayIndex++] = this._instance._items[ix]._item.Value.Left;
 				}
 				else
 				{
-					for (int i = 0; i < instance.items.Length; ++i)
+					for (int i = 0; i < this._instance._items.Length; ++i)
 					{
-						if (!instance.items[i].item.HasValue)
+						if (!this._instance._items[i]._item.HasValue)
 							continue;
-						array[arrayIndex++] = instance.items[i].item.Value.Left;
+						array[arrayIndex++] = this._instance._items[i]._item.Value.Left;
 					}
 				}
 			}
 
 			public IEnumerator<TLeft> GetEnumerator()
 			{
-				if (useKey)
+				if (this._useKey)
 				{
-					for (int ix = instance.FindRight(key); ix >= 0; ix = instance.FindRightNext(ix))
-						yield return instance.items[ix].item.Value.Left;
+					for (int ix = this._instance.FindRight(this._key); ix >= 0; ix = this._instance.FindRightNext(ix))
+						yield return this._instance._items[ix]._item.Value.Left;
 				}
 				else
 				{
-					foreach (var kp in instance)
+					foreach (var kp in this._instance)
 						yield return kp.Left;
 				}
 			}
 
 			public bool Remove(TLeft item)
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				Debug.Assert(useKey);
-				return instance.Remove(item, key);
+				Debug.Assert(this._useKey);
+				return this._instance.Remove(item, this._key);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -462,30 +462,30 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new LeftCollection { instance = this, useKey = false };
+				return new LeftCollection { _instance = this, _useKey = false };
 			}
 		}
 
 		internal class RightCollection : ICollection<TRight>
 		{
-			internal Multibimap<TLeft, TRight> instance;
-			internal bool useKey;
-			internal TLeft key;
+			internal Multibimap<TLeft, TRight> _instance;
+			internal bool _useKey;
+			internal TLeft _key;
 
 
 			public int Count
 			{
 				get
 				{
-					if (useKey)
-						return instance.Count;
+					if (this._useKey)
+						return this._instance.Count;
 					else
 					{
 
 						int ct = 0;
-						for (int ix = instance.FindLeft(key); ix >= 0; ix = instance.FindLeftNext(ix))
+						for (int ix = this._instance.FindLeft(this._key); ix >= 0; ix = this._instance.FindLeftNext(ix))
 						{
-							Debug.Assert(instance.items[ix].item.HasValue);
+							Debug.Assert(this._instance._items[ix]._item.HasValue);
 							++ct;
 						}
 						return ct;
@@ -497,76 +497,76 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return !useKey || instance.IsReadOnly;
+					return !this._useKey || this._instance.IsReadOnly;
 				}
 			}
 
 			public void Add(TRight item)
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				Debug.Assert(useKey);
-				instance.Add(key, item);
+				Debug.Assert(this._useKey);
+				this._instance.Add(this._key, item);
 			}
 
 			public void Clear()
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				Debug.Assert(useKey);
-				instance.Remove(key);
+				Debug.Assert(this._useKey);
+				this._instance.Remove(this._key);
 			}
 
 			public bool Contains(TRight item)
 			{
-				if (useKey)
-					return instance.Contains(key, item);
+				if (this._useKey)
+					return this._instance.Contains(this._key, item);
 				else
-					return instance.ContainsKey(item);
+					return this._instance.ContainsKey(item);
 			}
 
 			public void CopyTo(TRight[] array, int arrayIndex)
 			{
 				if (array == null)
 					throw new ArgumentNullException("array");
-				if (array.Length - arrayIndex < Count)
+				if (array.Length - arrayIndex < this.Count)
 					throw new ArgumentException("Not enough space in array.");
-				if (useKey)
+				if (this._useKey)
 				{
-					for (int ix = instance.FindLeft(key); ix >= 0; ix = instance.FindLeftNext(ix))
-						array[arrayIndex++] = instance.items[ix].item.Value.Right;
+					for (int ix = this._instance.FindLeft(this._key); ix >= 0; ix = this._instance.FindLeftNext(ix))
+						array[arrayIndex++] = this._instance._items[ix]._item.Value.Right;
 				}
 				else
 				{
-					for (int i = 0; i < instance.items.Length; ++i)
+					for (int i = 0; i < this._instance._items.Length; ++i)
 					{
-						if (!instance.items[i].item.HasValue)
+						if (!this._instance._items[i]._item.HasValue)
 							continue;
-						array[arrayIndex++] = instance.items[i].item.Value.Right;
+						array[arrayIndex++] = this._instance._items[i]._item.Value.Right;
 					}
 				}
 			}
 
 			public IEnumerator<TRight> GetEnumerator()
 			{
-				if (useKey)
+				if (this._useKey)
 				{
-					for (int ix = instance.FindLeft(key); ix >= 0; ix = instance.FindLeftNext(ix))
-						yield return instance.items[ix].item.Value.Right;
+					for (int ix = this._instance.FindLeft(this._key); ix >= 0; ix = this._instance.FindLeftNext(ix))
+						yield return this._instance._items[ix]._item.Value.Right;
 				}
 				else
 				{
-					foreach (var kp in instance)
+					foreach (var kp in this._instance)
 						yield return kp.Right;
 				}
 			}
 
 			public bool Remove(TRight item)
 			{
-				if (IsReadOnly)
+				if (this.IsReadOnly)
 					throw new NotSupportedException("This collection is read-only.");
-				Debug.Assert(useKey);
-				return instance.Remove(key, item);
+				Debug.Assert(this._useKey);
+				return this._instance.Remove(this._key, item);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -579,7 +579,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new RightCollection { instance = this, useKey = false };
+				return new RightCollection { _instance = this, _useKey = false };
 			}
 		}
 
@@ -587,7 +587,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new LeftCollection { instance = this, useKey = true, key = key };
+				return new LeftCollection { _instance = this, _useKey = true, _key = key };
 			}
 
 			set
@@ -597,9 +597,9 @@ namespace ExtendedSystem
 					Remove(key);
 					return;
 				}
-				TLeft[] l = value.NoneOrThrow((o) => o == null, new Lazy<InvalidOperationException>(() => new InvalidOperationException("The collection may not contain null items."))).ToArray();
+				var l = value.NoneOrThrow((o) => o == null, new Lazy<InvalidOperationException>(() => new InvalidOperationException("The collection may not contain null items."))).ToArray();
 				Remove(key);
-				foreach (TLeft v in l)
+				foreach (var v in l)
 					Add(v, key);
 			}
 		}
@@ -608,7 +608,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new RightCollection { instance = this, useKey = true, key = key };
+				return new RightCollection { _instance = this, _useKey = true, _key = key };
 			}
 
 			set
@@ -618,9 +618,9 @@ namespace ExtendedSystem
 					Remove(key);
 					return;
 				}
-				TRight[] l = value.NoneOrThrow((o) => o == null, new Lazy<InvalidOperationException>(() => new InvalidOperationException("The collection may not contain null items."))).ToArray();
+				var l = value.NoneOrThrow((o) => o == null, new Lazy<InvalidOperationException>(() => new InvalidOperationException("The collection may not contain null items."))).ToArray();
 				Remove(key);
-				foreach (TRight v in l)
+				foreach (var v in l)
 					Add(key, v);
 			}
 		}
@@ -641,8 +641,8 @@ namespace ExtendedSystem
 			if (source == null)
 				throw new ArgumentNullException("source");
 			int needed = source.Count;
-			if (freeCount < needed)
-				Realloc((this.items.Length - freeCount) + needed);
+			if (this._freeCount < needed)
+				Realloc((this._items.Length - this._freeCount) + needed);
 			foreach (var kp in source)
 				Add(kp.Left, kp.Right);
 		}
@@ -662,8 +662,8 @@ namespace ExtendedSystem
 			if (source == null)
 				throw new ArgumentNullException("source");
 			int needed = source.Count;
-			if (freeCount < needed)
-				Realloc((this.items.Length - freeCount) + needed);
+			if (this._freeCount < needed)
+				Realloc((this._items.Length - this._freeCount) + needed);
 			foreach (var kvp in source)
 				Add(kvp.Key, kvp.Value);
 		}
@@ -679,25 +679,25 @@ namespace ExtendedSystem
 
 		public void Clear()
 		{
-			for (int i = 0; i < items.Length;)
+			for (int i = 0; i < this._items.Length;)
 			{
 				int j = i++;
-				items[j].rnext = items[j].lnext = (i < items.Length ? i : -1);
-				items[j].hash = new KeyPair<int, int>(0, 0);
-				items[j].item = null;
+				this._items[j]._rnext = this._items[j]._lnext = (i < this._items.Length ? i : -1);
+				this._items[j]._hash = new KeyPair<int, int>(0, 0);
+				this._items[j]._item = null;
 			}
-			freeIndex = 0;
-			freeCount = items.Length;
-			lefthash.Fill(-1);
-			righthash.Fill(-1);
-			++version;
+			this._freeIndex = 0;
+			this._freeCount = this._items.Length;
+			this._lefthash.Fill(-1);
+			this._righthash.Fill(-1);
+			++this._version;
 		}
 
 		public bool Contains(KeyPair<TLeft, TRight> item)
 		{
 			for (int ix = FindLeft(item.Left); ix >= 0; ix = FindLeftNext(ix))
 			{
-				if (rightcmp.Equals(item.Right, items[ix].item.Value.Right))
+				if (this._rightcmp.Equals(item.Right, this._items[ix]._item.Value.Right))
 					return true;
 			}
 			return false;
@@ -717,26 +717,26 @@ namespace ExtendedSystem
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
-			if ((array.Length - arrayIndex) < Count)
+			if ((array.Length - arrayIndex) < this.Count)
 				throw new ArgumentException("Not enough space in array.");
-			for (int ix = 0; ix < items.Length; ++ix)
+			for (int ix = 0; ix < this._items.Length; ++ix)
 			{
-				if (!items[ix].item.HasValue)
+				if (!this._items[ix]._item.HasValue)
 					continue;
-				array[arrayIndex++] = items[ix].item.Value;
+				array[arrayIndex++] = this._items[ix]._item.Value;
 			}
 		}
 
 		public IEnumerator<KeyPair<TLeft, TRight>> GetEnumerator()
 		{
-			int _ver = version;
-			for (int ix = 0; ix < items.Length; ++ix)
+			int _ver = this._version;
+			for (int ix = 0; ix < this._items.Length; ++ix)
 			{
-				if (_ver != version)
+				if (_ver != this._version)
 					throw new InvalidOperationException("The dictionary has been modified, so the enumerator is now invalid.");
-				if (!items[ix].item.HasValue)
+				if (!this._items[ix]._item.HasValue)
 					continue;
-				yield return items[ix].item.Value;
+				yield return this._items[ix]._item.Value;
 			}
 		}
 
@@ -755,7 +755,7 @@ namespace ExtendedSystem
 				any = true;
 			}
 			if (any)
-				++version;
+				++this._version;
 			return false;
 		}
 
@@ -769,7 +769,7 @@ namespace ExtendedSystem
 				any = true;
 			}
 			if (any)
-				++version;
+				++this._version;
 			return false;
 		}
 
@@ -781,13 +781,13 @@ namespace ExtendedSystem
 				value = default(TLeft);
 				return false;
 			}
-			Debug.Assert(items[ix].item.HasValue);
+			Debug.Assert(this._items[ix]._item.HasValue);
 			if (FindRightNext(ix) >= 0)
 			{
 				value = default(TLeft);
 				return false;
 			}
-			value = items[ix].item.Value.Left;
+			value = this._items[ix]._item.Value.Left;
 			return true;
 		}
 
@@ -799,13 +799,13 @@ namespace ExtendedSystem
 				value = default(TRight);
 				return false;
 			}
-			Debug.Assert(items[ix].item.HasValue);
+			Debug.Assert(this._items[ix]._item.HasValue);
 			if (FindLeftNext(ix) >= 0)
 			{
 				value = default(TRight);
 				return false;
 			}
-			value = items[ix].item.Value.Right;
+			value = this._items[ix]._item.Value.Right;
 			return true;
 		}
 
@@ -818,10 +818,10 @@ namespace ExtendedSystem
 		{
 			for (int ix = FindLeft(left); ix >= 0; ix = FindLeftNext(ix))
 			{
-				if (rightcmp.Equals(right, items[ix].item.Value.Right))
+				if (this._rightcmp.Equals(right, this._items[ix]._item.Value.Right))
 				{
 					Unlink(ix);
-					++version;
+					++this._version;
 					return true;
 				}
 			}
@@ -832,7 +832,7 @@ namespace ExtendedSystem
 		{
 			for (int ix = FindLeft(left); ix >= 0; ix = FindLeftNext(ix))
 			{
-				if (rightcmp.Equals(right, items[ix].item.Value.Right))
+				if (this._rightcmp.Equals(right, this._items[ix]._item.Value.Right))
 				{
 					return true;
 				}

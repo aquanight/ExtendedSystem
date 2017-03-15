@@ -9,30 +9,20 @@ namespace ExtendedSystem
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1815:OverrideEqualsAndOperatorEqualsOnValueTypes")]
 	public struct KeyPair<TLeftKey, TRightKey>
 	{
-		private TLeftKey left;
-		private TRightKey right;
-
 		public KeyPair(TLeftKey left, TRightKey right)
 		{
-			this.left = left;
-			this.right = right;
+			this.Left = left;
+			this.Right = right;
 		}
 
 		public TLeftKey Left
 		{
-			get
-			{
-				return left;
-			}
-
+			get;
 		}
 
 		public TRightKey Right
 		{
-			get
-			{
-				return right;
-			}
+			get;
 		}
 
 		
@@ -68,22 +58,20 @@ namespace ExtendedSystem
 		// Use nullables so that we can use the entire hashcode.
 		private struct Entry
 		{
-			internal KeyPair<TLeft, TRight>? item; // null if this is a free entry
-			internal KeyPair<int, int> hash; // Invalid if !item.HasValue
+			internal KeyPair<TLeft, TRight>? _item; // null if this is a free entry
+			internal KeyPair<int, int> _hash; // Invalid if !item.HasValue
 							 // If this is a "free" entry, lnext == rnext
-			internal int lnext; // -1 if this is the last of the chain
-			internal int rnext; // -1 if this is the last of the chain
-			internal int lprev; // -1 if this is the first of the chain, -1 for free entries
-			internal int rprev; // -1 if this is the first of the chain, -1 for free entries
+			internal int _lnext; // -1 if this is the last of the chain
+			internal int _rnext; // -1 if this is the last of the chain
+			internal int _lprev; // -1 if this is the first of the chain, -1 for free entries
+			internal int _rprev; // -1 if this is the first of the chain, -1 for free entries
 		}
-		private Entry[] items;
-		private int[] lefthash; // Empty buckets contain -1
-		private int[] righthash;
-		private int version = 0;
-		private int freeIndex; // -1 : no free entries - next addition will force a reallocation
-		private int freeCount;
-		private IEqualityComparer<TLeft> leftcmp;
-		private IEqualityComparer<TRight> rightcmp;
+		private Entry[] _items;
+		private int[] _lefthash; // Empty buckets contain -1
+		private int[] _righthash;
+		private int _version = 0;
+		private int _freeIndex; // -1 : no free entries - next addition will force a reallocation
+		private int _freeCount;
 
 		// Performs a reallocation of the entry set.
 		// A general condition is that items, lefthash, and righthash are all the same length.
@@ -100,13 +88,13 @@ namespace ExtendedSystem
 		private void Realloc(int desiredCapacity)
 		{
 			Entry[] newItems;
-			if (items != null && lefthash != null && righthash != null)
+			if (this._items != null && this._lefthash != null && this._righthash != null)
 			{
 				if (desiredCapacity < 16)
 					desiredCapacity = 16;
-				if (desiredCapacity < (items.Length - freeCount))
-					desiredCapacity = items.Length - freeCount;
-				if (desiredCapacity <= items.Length && desiredCapacity > items.Length / 2)
+				if (desiredCapacity < (this._items.Length - this._freeCount))
+					desiredCapacity = this._items.Length - this._freeCount;
+				if (desiredCapacity <= this._items.Length && desiredCapacity > this._items.Length / 2)
 					return;
 			}
 			// Reallocation is happening.
@@ -116,18 +104,18 @@ namespace ExtendedSystem
 			newItems = new Entry[targetSize];
 			int newFreeCt = targetSize;
 			int newFreeIx = 0;
-			if (items != null)
+			if (this._items != null)
 			{
-				for (int i = 0; i < items.Length; ++i)
+				for (int i = 0; i < this._items.Length; ++i)
 				{
-					if (!items[i].item.HasValue)
+					if (!this._items[i]._item.HasValue)
 						continue;
 					--newFreeCt;
-					newItems[newFreeIx] = items[i];
-					newItems[newFreeIx].lnext = -1;
-					newItems[newFreeIx].rnext = -1;
-					newItems[newFreeIx].rprev = -1;
-					newItems[newFreeIx].rnext = -1;
+					newItems[newFreeIx] = this._items[i];
+					newItems[newFreeIx]._lnext = -1;
+					newItems[newFreeIx]._rnext = -1;
+					newItems[newFreeIx]._rprev = -1;
+					newItems[newFreeIx]._rnext = -1;
 					newFreeIx++;
 				}
 			}
@@ -139,86 +127,86 @@ namespace ExtendedSystem
 			//		newItems[i].lprev = newItems[i].rprev = newItems[i].lnext = newItems[i].rnext = -1;
 			//	}
 			//}
-			items = newItems;
-			freeCount = newFreeCt;
-			freeIndex = newFreeIx;
-			for (int i = newFreeIx; i < items.Length;)
+			this._items = newItems;
+			this._freeCount = newFreeCt;
+			this._freeIndex = newFreeIx;
+			for (int i = newFreeIx; i < this._items.Length;)
 			{
 				int j = i++;
-				items[j].rnext = items[j].lnext = (i < items.Length ? i : -1);
-				items[j].lprev = items[j].rprev = (j == newFreeIx ? -1 : j - 1);
+				this._items[j]._rnext = this._items[j]._lnext = (i < this._items.Length ? i : -1);
+				this._items[j]._lprev = this._items[j]._rprev = (j == newFreeIx ? -1 : j - 1);
 			}
-			lefthash = null;
-			righthash = null;
+			this._lefthash = null;
+			this._righthash = null;
 			Rehash(false);
 		}
 
 		public void Rehash(bool newHashes)
 		{
-			lefthash = new int[items.Length];
-			righthash = new int[items.Length];
-			lefthash.Fill(-1);
-			righthash.Fill(-1);
-			for (int i = 0; i < items.Length; ++i)
+			this._lefthash = new int[this._items.Length];
+			this._righthash = new int[this._items.Length];
+			this._lefthash.Fill(-1);
+			this._righthash.Fill(-1);
+			for (int i = 0; i < this._items.Length; ++i)
 			{
-				if (!items[i].item.HasValue)
+				if (!this._items[i]._item.HasValue)
 					continue;
-				int lh = items[i].hash.Left;
-				int rh = items[i].hash.Right;
+				int lh = this._items[i]._hash.Left;
+				int rh = this._items[i]._hash.Right;
 				if (newHashes)
 				{
-					var p = items[i].item.Value;
-					lh = leftcmp.GetHashCode(p.Left);
-					rh = rightcmp.GetHashCode(p.Right);
-					items[i].hash = new KeyPair<int, int>(lh, rh);
+					var p = this._items[i]._item.Value;
+					lh = this.LeftComparer.GetHashCode(p.Left);
+					rh = this.RightComparer.GetHashCode(p.Right);
+					this._items[i]._hash = new KeyPair<int, int>(lh, rh);
 				}
-				int lhix = lefthash.GetFromHash(lh);
-				int rhix = righthash.GetFromHash(rh);
-				items[i].lprev = items[i].rprev = -1;
-				items[i].lnext = lhix;
+				int lhix = this._lefthash.GetFromHash(lh);
+				int rhix = this._righthash.GetFromHash(rh);
+				this._items[i]._lprev = this._items[i]._rprev = -1;
+				this._items[i]._lnext = lhix;
 				if (lhix >= 0)
 				{
-					Debug.Assert(items[lhix].lprev == -1 || items[lhix].lprev == i);
-					items[lhix].lprev = i;
+					Debug.Assert(this._items[lhix]._lprev == -1 || this._items[lhix]._lprev == i);
+					this._items[lhix]._lprev = i;
 				}
-				lefthash.SetFromHash(lh, i);
-				items[i].rnext = rhix;
+				this._lefthash.SetFromHash(lh, i);
+				this._items[i]._rnext = rhix;
 				if (rhix >= 0)
 				{
-					Debug.Assert(items[rhix].rprev == -1 || items[rhix].rprev == i);
-					items[rhix].rprev = i;
+					Debug.Assert(this._items[rhix]._rprev == -1 || this._items[rhix]._rprev == i);
+					this._items[rhix]._rprev = i;
 				}
-				righthash.SetFromHash(rh, i);
+				this._righthash.SetFromHash(rh, i);
 			}
 			CheckIntegrity();
 		}
 
 		private int FindLeft(TLeft key)
 		{
-			int hsh = leftcmp.GetHashCode(key);
-			int ix = lefthash.GetFromHash(hsh);
+			int hsh = this.LeftComparer.GetHashCode(key);
+			int ix = this._lefthash.GetFromHash(hsh);
 			while (ix != -1)
 			{
-				Debug.Assert(items[ix].item.HasValue);
-				if (leftcmp.Equals(items[ix].item.Value.Left, key))
+				Debug.Assert(this._items[ix]._item.HasValue);
+				if (this.LeftComparer.Equals(this._items[ix]._item.Value.Left, key))
 					return ix;
 				else
-					ix = items[ix].lnext;
+					ix = this._items[ix]._lnext;
 			}
 			return -1;
 		}
 
 		private int FindRight(TRight key)
 		{
-			int hsh = rightcmp.GetHashCode(key);
-			int ix = righthash.GetFromHash(hsh);
+			int hsh = this.RightComparer.GetHashCode(key);
+			int ix = this._righthash.GetFromHash(hsh);
 			while (ix != -1)
 			{
-				Debug.Assert(items[ix].item.HasValue);
-				if (rightcmp.Equals(items[ix].item.Value.Right, key))
+				Debug.Assert(this._items[ix]._item.HasValue);
+				if (this.RightComparer.Equals(this._items[ix]._item.Value.Right, key))
 					return ix;
 				else
-					ix = items[ix].rnext;
+					ix = this._items[ix]._rnext;
 			}
 			return -1;
 		}
@@ -231,76 +219,76 @@ namespace ExtendedSystem
 			if (!Debugger.IsAttached)
 				return;
 			int failed = 0;
-			Debug.Assert(items != null, "Integrity checking failed because the array is null");
-			Debug.Assert(lefthash != null, "Integrity checking failed because the array is null");
-			Debug.Assert(righthash != null, "Integrity checking failed because the array is null");
-			Debug.Assert(items.Length == lefthash.Length && items.Length == righthash.Length, "Integrity checking failed because the arrays aren't congruent");
-			if (freeIndex >= 0)
+			Debug.Assert(this._items != null, "Integrity checking failed because the array is null");
+			Debug.Assert(this._lefthash != null, "Integrity checking failed because the array is null");
+			Debug.Assert(this._righthash != null, "Integrity checking failed because the array is null");
+			Debug.Assert(this._items.Length == this._lefthash.Length && this._items.Length == this._righthash.Length, "Integrity checking failed because the arrays aren't congruent");
+			if (this._freeIndex >= 0)
 			{
-				if (items[freeIndex].item.HasValue)
+				if (this._items[this._freeIndex]._item.HasValue)
 				{
-					Trace.TraceError("At {0}: bad free: item is head of the free chain but it has a value", freeIndex);
+					Trace.TraceError("At {0}: bad free: item is head of the free chain but it has a value", this._freeIndex);
 					++failed;
 				}
-				if (items[freeIndex].lprev != -1)
+				if (this._items[this._freeIndex]._lprev != -1)
 				{
-					Trace.TraceError("At {0}: bad linkage: item is head of the free chain but it has a previous link to {1}", freeIndex, items[freeIndex].lprev);
+					Trace.TraceError("At {0}: bad linkage: item is head of the free chain but it has a previous link to {1}", this._freeIndex, this._items[this._freeIndex]._lprev);
 					++failed;
 				}
 			}
 			else
 			{
-				if (freeCount != 0)
+				if (this._freeCount != 0)
 				{
 					Trace.TraceError("missing chain: we have a nonzero free count but no link to the free chain");
 					++failed;
 				}
 			}
-			for (int i = 0; i < items.Length; ++i)
+			for (int i = 0; i < this._items.Length; ++i)
 			{
 				// Check the left hash value
-				if (lefthash[i] >= 0)
+				if (this._lefthash[i] >= 0)
 				{
-					if (!items[lefthash[i]].item.HasValue)
+					if (!this._items[this._lefthash[i]]._item.HasValue)
 					{
-						Trace.TraceError("At {1}: item head of left hash chain {0} but it has no value", i, lefthash[i]);
+						Trace.TraceError("At {1}: item head of left hash chain {0} but it has no value", i, this._lefthash[i]);
 						++failed;
 					}
-					if (items[lefthash[i]].lprev >= 0)
+					if (this._items[this._lefthash[i]]._lprev >= 0)
 					{
-						Trace.TraceError("At {1}: item head of left hash chain {0} has a left-previous linkage to {2}", i, lefthash[i], items[lefthash[i]].lprev);
+						Trace.TraceError("At {1}: item head of left hash chain {0} has a left-previous linkage to {2}", i, this._lefthash[i], this._items[this._lefthash[i]]._lprev);
 						++failed;
 					}
 				}
 				// Check the right hash value
-				if (righthash[i] >= 0)
+				if (this._righthash[i] >= 0)
 				{
-					if (!items[righthash[i]].item.HasValue)
+					if (!this._items[this._righthash[i]]._item.HasValue)
 					{
-						Trace.TraceError("At {1}: item head of right hash chain {0} but it has no value", i, lefthash[i]);
+						Trace.TraceError("At {1}: item head of right hash chain {0} but it has no value", i, this._lefthash[i]);
 						++failed;
 					}
-					if (items[righthash[i]].rprev >= 0)
+					if (this._items[this._righthash[i]]._rprev >= 0)
 					{
-						Trace.TraceError("At {1}: item head of right hash chain {0} has a right-previous linkage to {2}", i, lefthash[i], items[lefthash[i]].rprev);
+						Trace.TraceError("At {1}: item head of right hash chain {0} has a right-previous linkage to {2}", i, this._lefthash[i], this._items[this._lefthash[i]]._rprev);
 						++failed;
 					}
 				}
-				int ln = items[i].lnext;
-				int rn = items[i].rnext;
-				int lp = items[i].lprev;
-				int rp = items[i].rprev;
-				int lh = items[i].hash.Left;
-				int rh = items[i].hash.Right;
-				if (items[i].item.HasValue)
+				int ln = this._items[i]._lnext;
+				int rn = this._items[i]._rnext;
+				int lp = this._items[i]._lprev;
+				int rp = this._items[i]._rprev;
+				int lh = this._items[i]._hash.Left;
+				int rh = this._items[i]._hash.Right;
+				if (this._items[i]._item.HasValue)
 				{
-					int vlh = leftcmp.GetHashCode(items[i].item.Value.Left);
+					int vlh = this.LeftComparer.GetHashCode(this._items[i]._item.Value.Left);
 					if (lh != vlh)
 					{
 						Trace.TraceError("At {0}: bad hash: the item's left hash is incorrect (expected: {1}, actual {2}", i, lh, vlh);
 						++failed;
 					}
-					int vrh = rightcmp.GetHashCode(items[i].item.Value.Right);
+					int vrh = this.RightComparer.GetHashCode(this._items[i]._item.Value.Right);
 					if (rh != vrh)
 					{
 						Trace.TraceError("At {0}: bad hash: the item's right hash is incorrect (expected: {1}, actual {2}", i, rh, vrh);
@@ -308,7 +296,7 @@ namespace ExtendedSystem
 					}
 					if (ln >= 0)
 					{
-						if ((lh - items[ln].hash.Left) % items.Length != 0)
+						if ((lh - this._items[ln]._hash.Left) % this._items.Length != 0)
 						{
 							Trace.TraceError("At {0}: bad hash linkage: the item's left hash is not congruent (modulo length) to its next link", i);
 							++failed;
@@ -318,20 +306,20 @@ namespace ExtendedSystem
 							Trace.TraceError("At {0}: circular linkage: the item's left-next links back on itself", i);
 							++failed;
 						}
-						if (!items[ln].item.HasValue)
+						if (!this._items[ln]._item.HasValue)
 						{
 							Trace.TraceError("At {0}: bad linkage: left-next is {1} which is a free entry", i, ln);
 							++failed;
 						}
-						if (items[ln].lprev != i)
+						if (this._items[ln]._lprev != i)
 						{
-							Trace.TraceError("At {0}: broken linkage: the item's left-next linkage points to {1}, but that item points to {2}", i, lp, items[lp].lprev);
+							Trace.TraceError("At {0}: broken linkage: the item's left-next linkage points to {1}, but that item points to {2}", i, lp, this._items[lp]._lprev);
 							++failed;
 						}
 					}
 					if (rn >= 0)
 					{
-						if ((rh - items[rn].hash.Right) % items.Length != 0)
+						if ((rh - this._items[rn]._hash.Right) % this._items.Length != 0)
 						{
 							Trace.TraceError("At {0}: bad hash linkage: the item's right hash is not congruent (modulo length) to its next link", i);
 							++failed;
@@ -341,29 +329,29 @@ namespace ExtendedSystem
 							Trace.TraceError("At {0}: circular linkage: the item's right-next links back on itself", i);
 							++failed;
 						}
-						if (!items[rn].item.HasValue)
+						if (!this._items[rn]._item.HasValue)
 						{
 							Trace.TraceError("At {0}: bad linkage: right-next is {1} which is a free entry", i, rn);
 							++failed;
 						}
-						if (items[rn].rprev != i)
+						if (this._items[rn]._rprev != i)
 						{
-							Trace.TraceError("At {0}: broken linkage: the item's right-next linkage points to {1}, but that item points to {2}", i, lp, items[rn].rprev);
+							Trace.TraceError("At {0}: broken linkage: the item's right-next linkage points to {1}, but that item points to {2}", i, lp, this._items[rn]._rprev);
 							++failed;
 						}
 					}
 					if (lp < 0)
 					{
-						if (!lefthash.Contains(i))
+						if (!this._lefthash.Contains(i))
 						{
-							int actual = lefthash.GetFromHash(lh);
+							int actual = this._lefthash.GetFromHash(lh);
 							Trace.TraceError("At {0}: orphaned chain: expected left hash slot is pointing to {1}", i, actual);
 							++failed;
 						}
 					}
 					else
 					{
-						if ((lh - items[lp].hash.Left) % items.Length != 0)
+						if ((lh - this._items[lp]._hash.Left) % this._items.Length != 0)
 						{
 							Trace.TraceError("At {0}: bad hash linkage: the item's left hash is not congruent (modulo length) to its previous link", i);
 							++failed;
@@ -378,29 +366,29 @@ namespace ExtendedSystem
 							Trace.TraceError("At {0}: circular linkage: the item's left-previous links back on itself", i);
 							++failed;
 						}
-						if (!items[lp].item.HasValue)
+						if (!this._items[lp]._item.HasValue)
 						{
 							Trace.TraceError("At {0}: bad linkage: left-previous is {1} which is a free entry", i, lp);
 							++failed;
 						}
-						if (items[lp].lnext != i)
+						if (this._items[lp]._lnext != i)
 						{
-							Trace.TraceError("At {0}: broken linkage: the item's left-previous linkage points to {1}, but that item points to {2}", i, lp, items[lp].lnext);
+							Trace.TraceError("At {0}: broken linkage: the item's left-previous linkage points to {1}, but that item points to {2}", i, lp, this._items[lp]._lnext);
 							++failed;
 						}
 					}
 					if (rp < 0)
 					{
-						if (!righthash.Contains(i))
+						if (!this._righthash.Contains(i))
 						{
-							int actual = righthash.GetFromHash(rh);
+							int actual = this._righthash.GetFromHash(rh);
 							Trace.TraceError("At {0}: orphaned chain: expected right hash slot is pointing to {1}", i, actual);
 							++failed;
 						}
 					}
 					else
 					{
-						if ((rh - items[rp].hash.Right) % items.Length != 0)
+						if ((rh - this._items[rp]._hash.Right) % this._items.Length != 0)
 						{
 							Trace.TraceError("At {0}: bad hash linkage: the item's right hash is not congruent (modulo length) to its previous link", i);
 							++failed;
@@ -415,14 +403,14 @@ namespace ExtendedSystem
 							Trace.TraceError("At {0}: circular linkage: the item's right-previous links back on itself", i);
 							++failed;
 						}
-						if (!items[rp].item.HasValue)
+						if (!this._items[rp]._item.HasValue)
 						{
 							Trace.TraceError("At {0}: bad linkage: right-previous is {1} which is a free entry", i, rp);
 							++failed;
 						}
-						if (items[rp].rnext != i)
+						if (this._items[rp]._rnext != i)
 						{
-							Trace.TraceError("At {0}: broken linkage: the item's right-previous linkage points to {1}, but that item points to {2}", i, lp, items[rp].rnext);
+							Trace.TraceError("At {0}: broken linkage: the item's right-previous linkage points to {1}, but that item points to {2}", i, lp, this._items[rp]._rnext);
 							++failed;
 						}
 					}
@@ -446,22 +434,22 @@ namespace ExtendedSystem
 							Trace.TraceError("At {0}: circular linkage: the item's left-next links back on itself", i);
 							++failed;
 						}
-						if (items[ln].item.HasValue)
+						if (this._items[ln]._item.HasValue)
 						{
 							Trace.TraceError("At {0}: bad linkage: left-next is {1} which is not a free entry", i, ln);
 							++failed;
 						}
-						if (items[ln].lprev != i)
+						if (this._items[ln]._lprev != i)
 						{
-							Trace.TraceError("At {0}: broken linkage: the item's left-next linkage points to {1}, but that item points to {2}", i, ln, items[ln].lprev);
+							Trace.TraceError("At {0}: broken linkage: the item's left-next linkage points to {1}, but that item points to {2}", i, ln, this._items[ln]._lprev);
 							++failed;
 						}
 					}
 					if (lp < 0)
 					{
-						if (freeIndex != i)
+						if (this._freeIndex != i)
 						{
-							Trace.TraceError("At {0}: orphaned chain: expected free index is pointing to {1}", i, freeIndex);
+							Trace.TraceError("At {0}: orphaned chain: expected free index is pointing to {1}", i, this._freeIndex);
 							++failed;
 						}
 					}
@@ -477,14 +465,14 @@ namespace ExtendedSystem
 							Trace.TraceError("At {0}: circular linkage: the item's left-previous links back on itself", i);
 							++failed;
 						}
-						if (items[lp].item.HasValue)
+						if (this._items[lp]._item.HasValue)
 						{
 							Trace.TraceError("At {0}: bad linkage: left-previous is {1} which is not a free entry", i, lp);
 							++failed;
 						}
-						if (items[lp].lnext != i)
+						if (this._items[lp]._lnext != i)
 						{
-							Trace.TraceError("At {0}: broken linkage: the item's left-previous linkage points to {1}, but that item points to {2}", i, lp, items[lp].lnext);
+							Trace.TraceError("At {0}: broken linkage: the item's left-previous linkage points to {1}, but that item points to {2}", i, lp, this._items[lp]._lnext);
 							++failed;
 						}
 					}
@@ -507,12 +495,8 @@ namespace ExtendedSystem
 
 		public Bimap(int capacity, IEqualityComparer<TLeft> leftComparer, IEqualityComparer<TRight> rightComparer)
 		{
-			if (leftComparer == null)
-				throw new ArgumentNullException("leftComparer");
-			if (rightComparer == null)
-				throw new ArgumentNullException("rightComparer");
-			leftcmp = leftComparer;
-			rightcmp = rightComparer;
+			this.LeftComparer = leftComparer ?? throw new ArgumentNullException("leftComparer");
+			this.RightComparer = rightComparer ?? throw new ArgumentNullException("rightComparer");
 			Realloc(capacity);
 		}
 
@@ -544,38 +528,38 @@ namespace ExtendedSystem
 
 		private void Unlink(int ix)
 		{
-			if (items[ix].lprev < 0)
+			if (this._items[ix]._lprev < 0)
 			{
-				int lh = items[ix].hash.Left;
-				Debug.Assert(lefthash.GetFromHash(lh) == ix);
-				lefthash.SetFromHash(lh, items[ix].lnext);
+				int lh = this._items[ix]._hash.Left;
+				Debug.Assert(this._lefthash.GetFromHash(lh) == ix);
+				this._lefthash.SetFromHash(lh, this._items[ix]._lnext);
 			}
 			else
 			{
-				items[items[ix].lprev].lnext = items[ix].lnext;
+				this._items[this._items[ix]._lprev]._lnext = this._items[ix]._lnext;
 			}
-			if (items[ix].lnext >= 0)
-				items[items[ix].lnext].lprev = items[ix].lprev;
-			if (items[ix].rprev < 0)
+			if (this._items[ix]._lnext >= 0)
+				this._items[this._items[ix]._lnext]._lprev = this._items[ix]._lprev;
+			if (this._items[ix]._rprev < 0)
 			{
-				int rh = items[ix].hash.Right;
-				Debug.Assert(righthash.GetFromHash(rh) == ix);
-				righthash.SetFromHash(rh, items[ix].rnext);
+				int rh = this._items[ix]._hash.Right;
+				Debug.Assert(this._righthash.GetFromHash(rh) == ix);
+				this._righthash.SetFromHash(rh, this._items[ix]._rnext);
 			}
 			else
 			{
-				items[items[ix].rprev].rnext = items[ix].rnext;
+				this._items[this._items[ix]._rprev]._rnext = this._items[ix]._rnext;
 			}
-			if (items[ix].rnext >= 0)
-				items[items[ix].rnext].rprev = items[ix].rprev;
-			items[ix].lnext = freeIndex;
-			items[ix].rnext = freeIndex;
-			items[ix].lprev = items[ix].rprev = -1;
-			items[ix].item = null;
-			items[freeIndex].lprev = ix;
-			items[freeIndex].rprev = ix;
-			freeIndex = ix;
-			++freeCount;
+			if (this._items[ix]._rnext >= 0)
+				this._items[this._items[ix]._rnext]._rprev = this._items[ix]._rprev;
+			this._items[ix]._lnext = this._freeIndex;
+			this._items[ix]._rnext = this._freeIndex;
+			this._items[ix]._lprev = this._items[ix]._rprev = -1;
+			this._items[ix]._item = null;
+			this._items[this._freeIndex]._lprev = ix;
+			this._items[this._freeIndex]._rprev = ix;
+			this._freeIndex = ix;
+			++this._freeCount;
 			CheckIntegrity();
 		}
 
@@ -601,31 +585,31 @@ namespace ExtendedSystem
 				else
 					Unlink(rix);
 			}
-			if (freeCount < 1)
-				Realloc(items.Length + 1);
-			int lh = leftcmp.GetHashCode(left);
-			int rh = rightcmp.GetHashCode(right);
-			int lhix = lefthash.GetFromHash(lh);
-			int rhix = righthash.GetFromHash(rh);
-			Debug.Assert(lhix < 0 || items[lhix].lprev == -1);
-			Debug.Assert(rhix < 0 || items[rhix].rprev == -1);
-			int ix = freeIndex;
-			freeIndex = items[ix].lnext;
-			items[ix].lprev = items[ix].rprev = -1;
-			if (freeIndex >= 0)
-				items[freeIndex].lprev = items[freeIndex].rprev = -1;
-			--freeCount;
-			items[ix].lnext = lhix;
+			if (this._freeCount < 1)
+				Realloc(this._items.Length + 1);
+			int lh = this.LeftComparer.GetHashCode(left);
+			int rh = this.RightComparer.GetHashCode(right);
+			int lhix = this._lefthash.GetFromHash(lh);
+			int rhix = this._righthash.GetFromHash(rh);
+			Debug.Assert(lhix < 0 || this._items[lhix]._lprev == -1);
+			Debug.Assert(rhix < 0 || this._items[rhix]._rprev == -1);
+			int ix = this._freeIndex;
+			this._freeIndex = this._items[ix]._lnext;
+			this._items[ix]._lprev = this._items[ix]._rprev = -1;
+			if (this._freeIndex >= 0)
+				this._items[this._freeIndex]._lprev = this._items[this._freeIndex]._rprev = -1;
+			--this._freeCount;
+			this._items[ix]._lnext = lhix;
 			if (lhix >= 0)
-				items[lhix].lprev = ix;
-			items[ix].rnext = rhix;
+				this._items[lhix]._lprev = ix;
+			this._items[ix]._rnext = rhix;
 			if (rhix >= 0)
-				items[rhix].rprev = ix;
-			lefthash.SetFromHash(lh, ix);
-			righthash.SetFromHash(rh, ix);
-			items[ix].hash = new KeyPair<int, int>(lh, rh);
-			items[ix].item = new KeyPair<TLeft, TRight>(left, right);
-			++version;
+				this._items[rhix]._rprev = ix;
+			this._lefthash.SetFromHash(lh, ix);
+			this._righthash.SetFromHash(rh, ix);
+			this._items[ix]._hash = new KeyPair<int, int>(lh, rh);
+			this._items[ix]._item = new KeyPair<TLeft, TRight>(left, right);
+			++this._version;
 			CheckIntegrity();
 		}
 
@@ -636,7 +620,7 @@ namespace ExtendedSystem
 				int ix = FindRight(key);
 				if (ix < 0)
 					throw new KeyNotFoundException();
-				return items[ix].item.Value.Left;
+				return this._items[ix]._item.Value.Left;
 			}
 
 			set
@@ -652,7 +636,7 @@ namespace ExtendedSystem
 				int ix = FindLeft(key);
 				if (ix < 0)
 					throw new KeyNotFoundException();
-				return items[ix].item.Value.Right;
+				return this._items[ix]._item.Value.Right;
 			}
 
 			set
@@ -665,7 +649,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return items.Length - freeCount;
+				return this._items.Length - this._freeCount;
 			}
 		}
 
@@ -679,13 +663,13 @@ namespace ExtendedSystem
 
 		internal class LeftCollection : ICollection<TLeft>
 		{
-			internal Bimap<TLeft, TRight> instance;
+			internal Bimap<TLeft, TRight> _instance;
 
 			public int Count
 			{
 				get
 				{
-					return instance.Count;
+					return this._instance.Count;
 				}
 			}
 
@@ -709,26 +693,26 @@ namespace ExtendedSystem
 
 			public bool Contains(TLeft item)
 			{
-				return instance.ContainsKey(item);
+				return this._instance.ContainsKey(item);
 			}
 
 			public void CopyTo(TLeft[] array, int arrayIndex)
 			{
 				if (array == null)
 					throw new ArgumentNullException("array");
-				if (array.Length - arrayIndex < Count)
+				if (array.Length - arrayIndex < this.Count)
 					throw new ArgumentException("Not enough space in array.");
-				for (int i = 0; i < instance.items.Length; ++i)
+				for (int i = 0; i < this._instance._items.Length; ++i)
 				{
-					if (!instance.items[i].item.HasValue)
+					if (!this._instance._items[i]._item.HasValue)
 						continue;
-					array[arrayIndex++] = instance.items[i].item.Value.Left;
+					array[arrayIndex++] = this._instance._items[i]._item.Value.Left;
 				}
 			}
 
 			public IEnumerator<TLeft> GetEnumerator()
 			{
-				foreach (var kp in instance)
+				foreach (var kp in this._instance)
 					yield return kp.Left;
 			}
 
@@ -747,19 +731,19 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new LeftCollection { instance = this };
+				return new LeftCollection { _instance = this };
 			}
 		}
 
 		internal class RightCollection : ICollection<TRight>
 		{
-			internal Bimap<TLeft, TRight> instance;
+			internal Bimap<TLeft, TRight> _instance;
 
 			public int Count
 			{
 				get
 				{
-					return instance.Count;
+					return this._instance.Count;
 				}
 			}
 
@@ -783,26 +767,26 @@ namespace ExtendedSystem
 
 			public bool Contains(TRight item)
 			{
-				return instance.ContainsKey(item);
+				return this._instance.ContainsKey(item);
 			}
 
 			public void CopyTo(TRight[] array, int arrayIndex)
 			{
 				if (array == null)
 					throw new ArgumentNullException("array");
-				if (array.Length - arrayIndex < Count)
+				if (array.Length - arrayIndex < this.Count)
 					throw new ArgumentException("Not enough space in array.");
-				for (int i = 0; i < instance.items.Length; ++i)
+				for (int i = 0; i < this._instance._items.Length; ++i)
 				{
-					if (!instance.items[i].item.HasValue)
+					if (!this._instance._items[i]._item.HasValue)
 						continue;
-					array[arrayIndex++] = instance.items[i].item.Value.Right;
+					array[arrayIndex++] = this._instance._items[i]._item.Value.Right;
 				}
 			}
 
 			public IEnumerator<TRight> GetEnumerator()
 			{
-				foreach (var kp in instance)
+				foreach (var kp in this._instance)
 					yield return kp.Right;
 			}
 
@@ -821,7 +805,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new RightCollection { instance = this };
+				return new RightCollection { _instance = this };
 			}
 		}
 
@@ -841,8 +825,8 @@ namespace ExtendedSystem
 			if (source == null)
 				throw new ArgumentNullException("source");
 			int needed = source.Count;
-			if (freeCount < needed)
-				Realloc((this.items.Length - freeCount) + needed);
+			if (this._freeCount < needed)
+				Realloc((this._items.Length - this._freeCount) + needed);
 			foreach (var kp in source)
 				Add(kp.Left, kp.Right);
 		}
@@ -862,8 +846,8 @@ namespace ExtendedSystem
 			if (source == null)
 				throw new ArgumentNullException("source");
 			int needed = source.Count;
-			if (freeCount < needed)
-				Realloc((this.items.Length - freeCount) + needed);
+			if (this._freeCount < needed)
+				Realloc((this._items.Length - this._freeCount) + needed);
 			foreach (var kvp in source)
 				Add(kvp.Key, kvp.Value);
 		}
@@ -879,18 +863,18 @@ namespace ExtendedSystem
 
 		public void Clear()
 		{
-			for (int i = 0; i < items.Length;)
+			for (int i = 0; i < this._items.Length;)
 			{
 				int j = i++;
-				items[j].rnext = items[j].lnext = (i < items.Length ? i : -1);
-				items[j].hash = new KeyPair<int, int>(0, 0);
-				items[j].item = null;
+				this._items[j]._rnext = this._items[j]._lnext = (i < this._items.Length ? i : -1);
+				this._items[j]._hash = new KeyPair<int, int>(0, 0);
+				this._items[j]._item = null;
 			}
-			freeIndex = 0;
-			freeCount = items.Length;
-			lefthash.Fill(-1);
-			righthash.Fill(-1);
-			++version;
+			this._freeIndex = 0;
+			this._freeCount = this._items.Length;
+			this._lefthash.Fill(-1);
+			this._righthash.Fill(-1);
+			++this._version;
 		}
 
 		public bool Contains(KeyPair<TLeft, TRight> item)
@@ -898,7 +882,7 @@ namespace ExtendedSystem
 			int ix = FindLeft(item.Left);
 			if (ix < 0)
 				return false;
-			return (rightcmp.Equals(item.Right, items[ix].item.Value.Right));
+			return (this.RightComparer.Equals(item.Right, this._items[ix]._item.Value.Right));
 		}
 
 		public bool ContainsKey(TRight key)
@@ -915,26 +899,26 @@ namespace ExtendedSystem
 		{
 			if (array == null)
 				throw new ArgumentNullException("array");
-			if ((array.Length - arrayIndex) < Count)
+			if ((array.Length - arrayIndex) < this.Count)
 				throw new ArgumentException("Not enough space in array.");
-			for (int ix = 0; ix < items.Length; ++ix)
+			for (int ix = 0; ix < this._items.Length; ++ix)
 			{
-				if (!items[ix].item.HasValue)
+				if (!this._items[ix]._item.HasValue)
 					continue;
-				array[arrayIndex++] = items[ix].item.Value;
+				array[arrayIndex++] = this._items[ix]._item.Value;
 			}
 		}
 
 		public IEnumerator<KeyPair<TLeft, TRight>> GetEnumerator()
 		{
-			int _ver = version;
-			for (int ix = 0; ix < items.Length; ++ix)
+			int _ver = this._version;
+			for (int ix = 0; ix < this._items.Length; ++ix)
 			{
-				if (_ver != version)
+				if (_ver != this._version)
 					throw new InvalidOperationException("The dictionary has been modified, so the enumerator is now invalid.");
-				if (!items[ix].item.HasValue)
+				if (!this._items[ix]._item.HasValue)
 					continue;
-				yield return items[ix].item.Value;
+				yield return this._items[ix]._item.Value;
 			}
 		}
 
@@ -943,10 +927,10 @@ namespace ExtendedSystem
 			int ix = FindLeft(item.Left);
 			if (ix < 0)
 				return false;
-			if (rightcmp.Equals(item.Right, items[ix].item.Value.Right))
+			if (this.RightComparer.Equals(item.Right, this._items[ix]._item.Value.Right))
 			{
 				Unlink(ix);
-				++version;
+				++this._version;
 				return true;
 			}
 			return false;
@@ -957,7 +941,7 @@ namespace ExtendedSystem
 			int ix = FindRight(key);
 			if (ix < 0)
 				return false;
-			++version;
+			++this._version;
 			Unlink(ix);
 			return true;
 		}
@@ -967,7 +951,7 @@ namespace ExtendedSystem
 			int ix = FindLeft(key);
 			if (ix < 0)
 				return false;
-			++version;
+			++this._version;
 			Unlink(ix);
 			return true;
 		}
@@ -980,8 +964,8 @@ namespace ExtendedSystem
 				value = default(TLeft);
 				return false;
 			}
-			Debug.Assert(items[ix].item.HasValue);
-			value = items[ix].item.Value.Left;
+			Debug.Assert(this._items[ix]._item.HasValue);
+			value = this._items[ix]._item.Value.Left;
 			return true;
 		}
 
@@ -993,8 +977,8 @@ namespace ExtendedSystem
 				value = default(TRight);
 				return false;
 			}
-			Debug.Assert(items[ix].item.HasValue);
-			value = items[ix].item.Value.Right;
+			Debug.Assert(this._items[ix]._item.HasValue);
+			value = this._items[ix]._item.Value.Right;
 			return true;
 		}
 
@@ -1005,25 +989,19 @@ namespace ExtendedSystem
 
 		public IEqualityComparer<TLeft> LeftComparer
 		{
-			get
-			{
-				return leftcmp;
-			}
+			get;
 		}
 
 		public IEqualityComparer<TRight> RightComparer
 		{
-			get
-			{
-				return rightcmp;
-			}
+			get;
 		}
 
 		public int Capacity
 		{
 			get
 			{
-				return items.Length;
+				return this._items.Length;
 			}
 			set
 			{
@@ -1035,7 +1013,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return Count / (float)lefthash.Length;
+				return this.Count / (float)this._lefthash.Length;
 			}
 		}
 

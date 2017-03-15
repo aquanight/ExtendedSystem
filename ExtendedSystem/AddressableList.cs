@@ -23,8 +23,7 @@ namespace ExtendedSystem
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
 	public sealed class AddressableList<T> : IList<T>
 	{
-		private T[] data;
-		private int used;
+		private T[] _data;
 
 		/// <summary>
 		/// Used for locking between Resize and GetRef. This does not guarantee thread safety!! It is used to block resize attempts while there's
@@ -32,7 +31,7 @@ namespace ExtendedSystem
 		/// The only reason it's even needed is because GetRef is considered re-entrant (because it calls a user-supplied callback).
 		/// Resize operations are not, but it does provide at least *some* protection from threading.
 		/// </summary>
-		private int state;
+		private int _state;
 
 		/// <summary>
 		/// Delegate which takes a reference to the array elements.
@@ -44,8 +43,8 @@ namespace ExtendedSystem
 
 		public AddressableList(int initialCapacity)
 		{
-			state = 0;
-			used = 0;
+			this._state = 0;
+			this.Count = 0;
 			Resize(initialCapacity);
 		}
 
@@ -62,16 +61,16 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		private bool TryEnterResize()
 		{
-			int _state = Interlocked.Decrement(ref state);
-			if (_state < 0)
+			int state = Interlocked.Decrement(ref this._state);
+			if (state < 0)
 				return true;
-			Interlocked.Increment(ref state);
+			Interlocked.Increment(ref this._state);
 			return false;
 		}
 
 		private void ExitResize()
 		{
-			Interlocked.Increment(ref state);
+			Interlocked.Increment(ref this._state);
 		}
 
 		/// <summary>
@@ -81,16 +80,16 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		private bool TryEnterReference()
 		{
-			int _state = Interlocked.Increment(ref state);
-			if (_state > 0)
+			int state = Interlocked.Increment(ref this._state);
+			if (state > 0)
 				return true;
-			Interlocked.Decrement(ref state);
+			Interlocked.Decrement(ref this._state);
 			return false;
 		}
 
 		private void ExitReference()
 		{
-			Interlocked.Decrement(ref state);
+			Interlocked.Decrement(ref this._state);
 		}
 
 		/// <summary>
@@ -99,16 +98,16 @@ namespace ExtendedSystem
 		/// <param name="newCapacity"></param>
 		private void Resize(int newCapacity)
 		{
-			if (newCapacity < used)
+			if (newCapacity < this.Count)
 				throw new ArgumentOutOfRangeException(nameof(newCapacity));
 			if (!TryEnterResize())
 				throw new InvalidOperationException("Cannot modify Capacity while there is an active element reference.");
 			try
 			{
-				T[] newData = (newCapacity == 0 ? Array.Empty<T>() : new T[newCapacity]);
-				for (int i = 0; i < used; ++i)
-					newData[i] = data[i];
-				data = newData;
+				var newData = (newCapacity == 0 ? Array.Empty<T>() : new T[newCapacity]);
+				for (int i = 0; i < this.Count; ++i)
+					newData[i] = this._data[i];
+				this._data = newData;
 			}
 			finally
 			{
@@ -120,15 +119,15 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				if (index < 0 || index >= data.Length)
+				if (index < 0 || index >= this._data.Length)
 					throw new ArgumentOutOfRangeException(nameof(index));
-				return data[index];
+				return this._data[index];
 			}
 			set
 			{
-				if (index < 0 || index >= data.Length)
+				if (index < 0 || index >= this._data.Length)
 					throw new ArgumentOutOfRangeException(nameof(index));
-				data[index] = value;
+				this._data[index] = value;
 			}
 		}
 
@@ -142,7 +141,7 @@ namespace ExtendedSystem
 		/// <param name="action"></param>
 		public void GetRef(int index, RefAction<T> action)
 		{
-			if (index < 0 || index >= used)
+			if (index < 0 || index >= this.Count)
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (action == null)
 				throw new ArgumentNullException(nameof(action));
@@ -151,7 +150,7 @@ namespace ExtendedSystem
 				throw new InvalidOperationException("Cannot get reference while a resize in progress.");
 			try
 			{
-				action(ref data[index]);
+				action(ref this._data[index]);
 			}
 			finally
 			{
@@ -175,7 +174,7 @@ namespace ExtendedSystem
 		/// <returns></returns>
 		public TResult GetRef<TResult>(int index, RefFunc<T, TResult> func)
 		{
-			if (index < 0 || index >= used)
+			if (index < 0 || index >= this.Count)
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (func == null)
 				throw new ArgumentNullException(nameof(func));
@@ -184,7 +183,7 @@ namespace ExtendedSystem
 				throw new InvalidOperationException("Cannot get reference while a resize in progress.");
 			try
 			{
-				return func(ref data[index]);
+				return func(ref this._data[index]);
 			}
 			finally
 			{
@@ -196,7 +195,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return data.Length;
+				return this._data.Length;
 			}
 			set
 			{
@@ -206,10 +205,8 @@ namespace ExtendedSystem
 
 		public int Count
 		{
-			get
-			{
-				return used;
-			}
+			get;
+			private set;
 		}
 
 		public bool IsReadOnly
@@ -222,18 +219,18 @@ namespace ExtendedSystem
 
 		public void Add(T item)
 		{
-			if (used >= data.Length)
-				Resize(used + 1);
-			data[used++] = item;
+			if (this.Count >= this._data.Length)
+				Resize(this.Count + 1);
+			this._data[this.Count++] = item;
 		}
 
 		public void AddRange(IEnumerable<T> collection)
 		{
-			T[] incoming = collection.ToArray();
-			if ((used + incoming.Length) > data.Length)
-				Resize(used + incoming.Length);
-			incoming.CopyTo<T>(this.data, used);
-			used += incoming.Length;
+			var incoming = collection.ToArray();
+			if ((this.Count + incoming.Length) > this._data.Length)
+				Resize(this.Count + incoming.Length);
+			incoming.CopyTo<T>(this._data, this.Count);
+			this.Count += incoming.Length;
 		}
 
 		public ReadOnlyCollection<T> AsReadOnly()
@@ -243,12 +240,12 @@ namespace ExtendedSystem
 
 		public int BinarySearch(T item)
 		{
-			return BinarySearch(0, used, item, null);
+			return BinarySearch(0, this.Count, item, null);
 		}
 
 		public int BinarySearch(T item, IComparer<T> comparer)
 		{
-			return BinarySearch(0, used, item, comparer);
+			return BinarySearch(0, this.Count, item, comparer);
 		}
 
 		public int BinarySearch(int index, int count, T item, IComparer<T> comparer)
@@ -257,11 +254,11 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("Specified range is invalid");
 			if (comparer == null)
 				comparer = Comparer<T>.Default;
-			return Array.BinarySearch(data, index, count, item, comparer);
+			return Array.BinarySearch(this._data, index, count, item, comparer);
 		}
 
 		public void Clear()
@@ -270,9 +267,9 @@ namespace ExtendedSystem
 				throw new InvalidOperationException("Cannot clear the collection while there is an active reference.");
 			try
 			{
-				for (int i = 0; i < used; ++i)
-					data[i] = default(T);
-				used = 0;
+				for (int i = 0; i < this.Count; ++i)
+					this._data[i] = default(T);
+				this.Count = 0;
 			}
 			finally
 			{
@@ -283,8 +280,8 @@ namespace ExtendedSystem
 		public bool Contains(T item)
 		{
 			var eq = EqualityComparer<T>.Default;
-			for (int i = 0; i < used; ++i)
-				if (eq.Equals(data[i], item))
+			for (int i = 0; i < this.Count; ++i)
+				if (eq.Equals(this._data[i], item))
 					return true;
 			return false;
 		}
@@ -293,10 +290,10 @@ namespace ExtendedSystem
 		{
 			if (converter == null)
 				throw new ArgumentNullException(nameof(converter));
-			AddressableList<TOutput> output = new AddressableList<TOutput>(Capacity);
-			output.used = this.used;
-			for (int i = 0; i < used; ++i)
-				output.data[i] = converter(this.data[i]);
+			var output = new AddressableList<TOutput>(this.Capacity);
+			output.Count = this.Count;
+			for (int i = 0; i < this.Count; ++i)
+				output._data[i] = converter(this._data[i]);
 			return output;
 		}
 
@@ -307,7 +304,7 @@ namespace ExtendedSystem
 
 		public void CopyTo(T[] array, int arrayIndex)
 		{
-			CopyTo(0, array, arrayIndex, used);
+			CopyTo(0, array, arrayIndex, this.Count);
 		}
 
 		public void CopyTo(int index, T[] array, int arrayIndex, int count)
@@ -318,22 +315,22 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("The source range is invalid.");
 			if (arrayIndex < 0)
 				throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 			if (arrayIndex + count > array.Length)
 				throw new ArgumentException("The destination range is invalid.");
 			for (int i = 0; i < count; ++i)
-				array[arrayIndex + i] = data[index + i];
+				array[arrayIndex + i] = this._data[index + i];
 		}
 
 		public bool Exists(Predicate<T> predicate)
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
-			for (int i = 0; i < used; ++i)
-				if (predicate(data[i]))
+			for (int i = 0; i < this.Count; ++i)
+				if (predicate(this._data[i]))
 					return true;
 			return false;
 		}
@@ -346,8 +343,8 @@ namespace ExtendedSystem
 				throw new InvalidOperationException("Cannot get reference while a resize in progress.");
 			try
 			{
-				for (int i = 0; i < used; ++i)
-					if (predicate(ref data[i]))
+				for (int i = 0; i < this.Count; ++i)
+					if (predicate(ref this._data[i]))
 						return true;
 				return false;
 			}
@@ -361,9 +358,9 @@ namespace ExtendedSystem
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
-			for (int i = 0; i < used; ++i)
-				if (predicate(data[i]))
-					return data[i];
+			for (int i = 0; i < this.Count; ++i)
+				if (predicate(this._data[i]))
+					return this._data[i];
 			return default(T);
 		}
 
@@ -371,23 +368,23 @@ namespace ExtendedSystem
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
-			AddressableList<T> result = new AddressableList<T>(Capacity);
-			for (int i = 0; i < used; ++i)
+			var result = new AddressableList<T>(this.Capacity);
+			for (int i = 0; i < this.Count; ++i)
 			{
-				if (predicate(data[i]))
-					result.data[result.used++] = data[i];
+				if (predicate(this._data[i]))
+					result._data[result.Count++] = this._data[i];
 			}
 			return result;
 		}
 
 		public int FindIndex(Predicate<T> predicate)
 		{
-			return FindIndex(0, used, predicate);
+			return FindIndex(0, this.Count, predicate);
 		}
 
 		public int FindIndex(int index, Predicate<T> predicate)
 		{
-			return FindIndex(index, used - index, predicate);
+			return FindIndex(index, this.Count - index, predicate);
 		}
 
 		public int FindIndex(int index, int count, Predicate<T> predicate)
@@ -398,11 +395,11 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("The search range is invalid.");
 			for (int i = 0; i < count; ++i)
 			{
-				if (predicate(data[index + i]))
+				if (predicate(this._data[index + i]))
 					return index + i;
 			}
 			return -1;
@@ -410,12 +407,12 @@ namespace ExtendedSystem
 
 		public int FindIndex(RefFunc<T, bool> predicate)
 		{
-			return FindIndex(0, used, predicate);
+			return FindIndex(0, this.Count, predicate);
 		}
 
 		public int FindIndex(int index, RefFunc<T, bool> predicate)
 		{
-			return FindIndex(index, used - index, predicate);
+			return FindIndex(index, this.Count - index, predicate);
 		}
 
 		public int FindIndex(int index, int count, RefFunc<T, bool> predicate)
@@ -426,7 +423,7 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("The search range is invalid.");
 			if (!TryEnterReference())
 				throw new InvalidOperationException("Cannot get reference during a resize operation.");
@@ -434,7 +431,7 @@ namespace ExtendedSystem
 			{
 				for (int i = 0; i < count; ++i)
 				{
-					if (predicate(ref data[index + i]))
+					if (predicate(ref this._data[index + i]))
 						return index + i;
 				}
 				return -1;
@@ -449,20 +446,20 @@ namespace ExtendedSystem
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
-			for (int i = used; i > 0; --i)
-				if (predicate(data[i - 1]))
-					return data[i - 1];
+			for (int i = this.Count; i > 0; --i)
+				if (predicate(this._data[i - 1]))
+					return this._data[i - 1];
 			return default(T);
 		}
 
 		public int FindLastIndex(Predicate<T> predicate)
 		{
-			return FindLastIndex(0, used, predicate);
+			return FindLastIndex(0, this.Count, predicate);
 		}
 
 		public int FindLastIndex(int index, Predicate<T> predicate)
 		{
-			return FindLastIndex(index, used - index, predicate);
+			return FindLastIndex(index, this.Count - index, predicate);
 		}
 
 		public int FindLastIndex(int index, int count, Predicate<T> predicate)
@@ -473,11 +470,11 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("The search range is invalid.");
 			for (int i = count; i > 0; --i)
 			{
-				if (predicate(data[index + i - 1]))
+				if (predicate(this._data[index + i - 1]))
 					return index + i - 1;
 			}
 			return -1;
@@ -485,12 +482,12 @@ namespace ExtendedSystem
 
 		public int FindLastIndex(RefFunc<T, bool> predicate)
 		{
-			return FindLastIndex(0, used, predicate);
+			return FindLastIndex(0, this.Count, predicate);
 		}
 
 		public int FindLastIndex(int index, RefFunc<T, bool> predicate)
 		{
-			return FindLastIndex(index, used - index, predicate);
+			return FindLastIndex(index, this.Count - index, predicate);
 		}
 
 		public int FindLastIndex(int index, int count, RefFunc<T, bool> predicate)
@@ -501,7 +498,7 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("The search range is invalid.");
 			if (!TryEnterReference())
 				throw new InvalidOperationException("Cannot get reference during a resize operation.");
@@ -509,7 +506,7 @@ namespace ExtendedSystem
 			{
 				for (int i = count; i > 0; --i)
 				{
-					if (predicate(ref data[index + i - 1]))
+					if (predicate(ref this._data[index + i - 1]))
 						return index + i - 1;
 				}
 				return -1;
@@ -524,8 +521,8 @@ namespace ExtendedSystem
 		{
 			if (action == null)
 				throw new ArgumentNullException(nameof(action));
-			for (int i = 0; i < used; ++i)
-				action(data[i]);
+			for (int i = 0; i < this.Count; ++i)
+				action(this._data[i]);
 		}
 
 		public void ForEach(RefAction<T> action)
@@ -536,8 +533,8 @@ namespace ExtendedSystem
 				throw new InvalidOperationException("Cannot get reference during a resize operation.");
 			try
 			{
-				for (int i = 0; i < used; ++i)
-					action(ref data[i]);
+				for (int i = 0; i < this.Count; ++i)
+					action(ref this._data[i]);
 			}
 			finally
 			{
@@ -547,18 +544,18 @@ namespace ExtendedSystem
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			for (int i = 0; i < used; ++i)
-				yield return data[i];
+			for (int i = 0; i < this.Count; ++i)
+				yield return this._data[i];
 		}
 
 		public int IndexOf(T item)
 		{
-			return IndexOf(item, 0, used);
+			return IndexOf(item, 0, this.Count);
 		}
 
 		public int IndexOf(T item, int index)
 		{
-			return IndexOf(item, index, used - index);
+			return IndexOf(item, index, this.Count - index);
 		}
 
 		public int IndexOf(T item, int index, int count)
@@ -567,11 +564,11 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("The search range is invalid.");
 			var eq = EqualityComparer<T>.Default;
 			for (int i = 0; i < count; ++i)
-				if (eq.Equals(data[index + i], item))
+				if (eq.Equals(this._data[index + i], item))
 					return i;
 			return -1;
 		}
@@ -584,9 +581,9 @@ namespace ExtendedSystem
 		/// <param name="item"></param>
 		public void Insert(int index, T item)
 		{
-			if (index < 0 || index > used)
+			if (index < 0 || index > this.Count)
 				throw new ArgumentOutOfRangeException(nameof(index));
-			if (index == used)
+			if (index == this.Count)
 			{
 				Add(item);
 				return;
@@ -595,23 +592,23 @@ namespace ExtendedSystem
 				throw new InvalidOperationException("Cannot insert items except at the end while there is an active reference.");
 			try
 			{
-				if (used == data.Length)
+				if (this.Count == this._data.Length)
 				{
-					T[] newData = new T[used + 1];
+					var newData = new T[this.Count + 1];
 					for (int i = 0; i < index; ++i)
 					{
-						newData[i] = data[i];
+						newData[i] = this._data[i];
 					}
-					for (int i = index; i < used; ++i)
-						newData[i + 1] = data[i];
+					for (int i = index; i < this.Count; ++i)
+						newData[i + 1] = this._data[i];
 					newData[index] = item;
-					data = newData;
+					this._data = newData;
 				}
 				else
 				{
-					for (int i = used; i > index; --i)
-						data[i] = data[i - 1];
-					data[index] = item;
+					for (int i = this.Count; i > index; --i)
+						this._data[i] = this._data[i - 1];
+					this._data[index] = item;
 				}
 			}
 			finally
@@ -622,38 +619,38 @@ namespace ExtendedSystem
 
 		public void InsertRange(int index, IEnumerable<T> collection)
 		{
-			if (index < 0 || index > used)
+			if (index < 0 || index > this.Count)
 				throw new ArgumentOutOfRangeException(nameof(index));
-			if (index == used)
+			if (index == this.Count)
 			{
 				AddRange(collection);
 				return;
 			}
-			T[] incoming = collection.ToArray();
+			var incoming = collection.ToArray();
 			if (!TryEnterResize())
 				throw new InvalidOperationException("Cannot insert items except at the end while there is an active reference.");
 			try
 			{
 				int count = incoming.Length;
-				if ((used + count) > data.Length)
+				if ((this.Count + count) > this._data.Length)
 				{
-					T[] newData = new T[used + count];
+					var newData = new T[this.Count + count];
 					for (int i = 0; i < index; ++i)
-						newData[i] = data[i];
+						newData[i] = this._data[i];
 					for (int i = 0; i < count; ++i)
 						newData[index + i] = incoming[i];
-					for (int i = index; i < used; ++i)
-						newData[i + count] = data[i];
-					data = newData;
+					for (int i = index; i < this.Count; ++i)
+						newData[i + count] = this._data[i];
+					this._data = newData;
 				}
 				else
 				{
-					for (int i = used; i > index; --i)
+					for (int i = this.Count; i > index; --i)
 					{
-						data[i + (count - 1)] = data[i - 1];
+						this._data[i + (count - 1)] = this._data[i - 1];
 					}
 					for (int i = 0; i < count; ++i)
-						data[index + i] = incoming[i];
+						this._data[index + i] = incoming[i];
 				}
 			}
 			finally
@@ -677,17 +674,17 @@ namespace ExtendedSystem
 
 		public void RemoveAt(int index)
 		{
-			if (index < 0 || index >= used)
+			if (index < 0 || index >= this.Count)
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (!TryEnterResize())
 				throw new InvalidOperationException("Cannot remove items while a reference is active.");
 			try
 			{
-				for (int i = index; i < (used - 1); ++i)
+				for (int i = index; i < (this.Count - 1); ++i)
 				{
-					data[i] = data[i + 1];
+					this._data[i] = this._data[i + 1];
 				}
-				data[--used] = default(T);
+				this._data[--this.Count] = default(T);
 			}
 			finally
 			{
@@ -705,17 +702,17 @@ namespace ExtendedSystem
 			{
 				int i = 0;
 				int movedown = 0;
-				while (i < used)
+				while (i < this.Count)
 				{
-					if (predicate(data[i]))
+					if (predicate(this._data[i]))
 					{
 						++movedown;
-						data[i] = default(T); // Blank it now so the GC can claim it and/or its objects.
+						this._data[i] = default(T); // Blank it now so the GC can claim it and/or its objects.
 					}
 					else if (movedown > 0)
 					{
-						data[i - movedown] = data[i];
-						data[i] = default(T);
+						this._data[i - movedown] = this._data[i];
+						this._data[i] = default(T);
 					}
 				}
 			}
@@ -740,17 +737,17 @@ namespace ExtendedSystem
 			{
 				int i = 0;
 				int movedown = 0;
-				while (i < used)
+				while (i < this.Count)
 				{
-					if (predicate(ref data[i]))
+					if (predicate(ref this._data[i]))
 					{
 						++movedown;
-						data[i] = default(T); // Blank it now so the GC can claim it and/or its objects.
+						this._data[i] = default(T); // Blank it now so the GC can claim it and/or its objects.
 					}
 					else if (movedown > 0)
 					{
-						data[i - movedown] = data[i];
-						data[i] = default(T);
+						this._data[i - movedown] = this._data[i];
+						this._data[i] = default(T);
 					}
 				}
 			}
@@ -766,20 +763,20 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("Target range is invalid.");
 			if (!TryEnterResize())
 				throw new InvalidOperationException("Cannot remove items while a reference is active.");
 			try
 			{
-				for (int i = index; i < (used - count); ++i)
+				for (int i = index; i < (this.Count - count); ++i)
 				{
-					data[i] = data[i + count];
+					this._data[i] = this._data[i + count];
 				}
-				int oldused = used;
-				used -= count;
-				for (int i = used; i < oldused; ++i)
-					data[i] = default(T);
+				int oldused = this.Count;
+				this.Count -= count;
+				for (int i = this.Count; i < oldused; ++i)
+					this._data[i] = default(T);
 			}
 			finally
 			{
@@ -789,7 +786,7 @@ namespace ExtendedSystem
 
 		public void Reverse()
 		{
-			Reverse(0, used);
+			Reverse(0, this.Count);
 		}
 
 		public void Reverse(int index, int count)
@@ -800,11 +797,11 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("Target range is invalid.");
 			try
 			{
-				Array.Reverse(data, index, count);
+				Array.Reverse(this._data, index, count);
 			}
 			finally
 			{
@@ -814,17 +811,17 @@ namespace ExtendedSystem
 
 		public void Sort()
 		{
-			Sort(0, used, null);
+			Sort(0, this.Count, null);
 		}
 
 		public void Sort(Comparison<T> comparer)
 		{
-			Sort(0, used, Comparer<T>.Create(comparer));
+			Sort(0, this.Count, Comparer<T>.Create(comparer));
 		}
 
 		public void Sort(IComparer<T> comparer)
 		{
-			Sort(0, used, comparer);
+			Sort(0, this.Count, comparer);
 		}
 
 		public void Sort(int index, int count, IComparer<T> comparer)
@@ -835,13 +832,13 @@ namespace ExtendedSystem
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if ((index + count) > used)
+			if ((index + count) > this.Count)
 				throw new ArgumentException("Target range is invalid.");
 			if (comparer == null)
 				comparer = Comparer<T>.Default;
 			try
 			{
-				Array.Sort(data, index, count, comparer);
+				Array.Sort(this._data, index, count, comparer);
 			}
 			finally
 			{
@@ -851,20 +848,20 @@ namespace ExtendedSystem
 
 		public T[] ToArray()
 		{
-			return (new ArraySegment<T>(data, 0, used)).ToArray();
+			return (new ArraySegment<T>(this._data, 0, this.Count)).ToArray();
 		}
 
 		public void TrimExcess()
 		{
-			Capacity = used;
+			this.Capacity = this.Count;
 		}
 
 		public bool TrueForAll(Predicate<T> predicate)
 		{
 			if (predicate == null)
 				throw new ArgumentNullException(nameof(predicate));
-			for (int i = 0; i < used; ++i)
-				if (!predicate(data[i]))
+			for (int i = 0; i < this.Count; ++i)
+				if (!predicate(this._data[i]))
 					return false;
 			return true;
 		}
@@ -877,8 +874,8 @@ namespace ExtendedSystem
 				throw new InvalidOperationException("Cannot acquire reference while a resize is in progress.");
 			try
 			{
-				for (int i = 0; i < used; ++i)
-					if (!predicate(ref data[i]))
+				for (int i = 0; i < this.Count; ++i)
+					if (!predicate(ref this._data[i]))
 						return false;
 				return true;
 			}

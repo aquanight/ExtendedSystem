@@ -18,7 +18,7 @@ namespace ExtendedSystem
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Multimap")]
 	public sealed class Multimap<TKey, TValue> : IMultimap<TKey, TValue>
 	{
-		private Dictionary<TKey, List<TValue>> dict;
+		private Dictionary<TKey, List<TValue>> _dict;
 
 		public Multimap() : this(0)
 		{
@@ -34,7 +34,7 @@ namespace ExtendedSystem
 
 		public Multimap(int capacity, IEqualityComparer<TKey> comparer)
 		{
-			dict = new Dictionary<TKey, List<TValue>>(capacity, comparer);
+			this._dict = new Dictionary<TKey, List<TValue>>(capacity, comparer);
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
@@ -51,15 +51,14 @@ namespace ExtendedSystem
 
 		internal class ValuesInKey : ICollection<TValue>
 		{
-			internal Multimap<TKey, TValue> instance;
-			internal TKey key;
+			internal Multimap<TKey, TValue> _instance;
+			internal TKey _key;
 
 			public int Count
 			{
 				get
 				{
-					List<TValue> l;
-					if (instance.dict.TryGetValue(key, out l))
+					if (this._instance._dict.TryGetValue(this._key, out var l))
 						return l.Count;
 					else
 						return 0;
@@ -70,29 +69,28 @@ namespace ExtendedSystem
 			{
 				get
 				{
-					return instance.IsReadOnly;
+					return this._instance.IsReadOnly;
 				}
 			}
 
 			public void Add(TValue item)
 			{
-				instance.Add(key, item);
+				this._instance.Add(this._key, item);
 			}
 
 			public void Clear()
 			{
-				instance.Remove(key);
+				this._instance.Remove(this._key);
 			}
 
 			public bool Contains(TValue item)
 			{
-				return instance.Contains(key, item);
+				return this._instance.Contains(this._key, item);
 			}
 
 			public void CopyTo(TValue[] array, int arrayIndex)
 			{
-				List<TValue> l;
-				if (instance.dict.TryGetValue(key, out l))
+				if (this._instance._dict.TryGetValue(this._key, out var l))
 				{
 					l.CopyTo(array, arrayIndex);
 				}
@@ -100,8 +98,7 @@ namespace ExtendedSystem
 
 			public IEnumerator<TValue> GetEnumerator()
 			{
-				List<TValue> l;
-				if (instance.dict.TryGetValue(key, out l))
+				if (this._instance._dict.TryGetValue(this._key, out var l))
 					return l.GetEnumerator();
 				else
 					return Enumerable.Empty<TValue>().GetEnumerator();
@@ -109,7 +106,7 @@ namespace ExtendedSystem
 
 			public bool Remove(TValue item)
 			{
-				return instance.Remove(key, item);
+				return this._instance.Remove(this._key, item);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -122,23 +119,21 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new ValuesInKey() { instance = this, key = key };
+				return new ValuesInKey() { _instance = this, _key = key };
 			}
 			set
 			{
 				if (value == null)
 				{
-					dict.Remove(key);
+					this._dict.Remove(key);
 					return;
 				}
-				ValuesInKey vik = value as ValuesInKey;
-				if (vik != null && vik.instance == this && dict.Comparer.Equals(vik.key, key))
+				if (value is ValuesInKey vik && vik._instance == this && this._dict.Comparer.Equals(vik._key, key))
 					return; // This is a no-op.
-				List<TValue> l = new List<TValue>(value);
-				List<TValue> ol;
-				if (dict.TryGetValue(key, out ol))
+				var l = new List<TValue>(value);
+				if (this._dict.TryGetValue(key, out var ol))
 					ol.Clear();
-				dict[key] = l;
+				this._dict[key] = l;
 			}
 		}
 
@@ -146,19 +141,18 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return dict[key].Single();
+				return this._dict[key].Single();
 			}
 
 			set
 			{
-				List<TValue> l;
-				if (dict.TryGetValue(key, out l))
+				if (this._dict.TryGetValue(key, out var l))
 				{
 					l.Clear();
 					l.Add(value);
 				}
 				else
-					dict[key] = new List<TValue>() { value };
+					this._dict[key] = new List<TValue>() { value };
 			}
 		}
 
@@ -166,7 +160,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return dict.Count;
+				return this._dict.Count;
 			}
 		}
 
@@ -182,19 +176,19 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return dict.Keys;
+				return this._dict.Keys;
 			}
 		}
 
 		internal class SingleValueCollection : ICollection<TValue>
 		{
-			internal Multimap<TKey, TValue> instance;
+			internal Multimap<TKey, TValue> _instance;
 
 			public int Count
 			{
 				get
 				{
-					return (from kvp in instance.dict select kvp.Value.Count).Sum();
+					return (from kvp in _instance._dict select kvp.Value.Count).Sum();
 				}
 			}
 
@@ -218,18 +212,18 @@ namespace ExtendedSystem
 
 			public bool Contains(TValue item)
 			{
-				return instance.dict.Any((kvp) => kvp.Value.Contains(item));
+				return this._instance._dict.Any((kvp) => kvp.Value.Contains(item));
 			}
 
 			public void CopyTo(TValue[] array, int arrayIndex)
 			{
-				var ls = (from kvp in instance.dict select kvp.Value).Aggregate<IEnumerable<TValue>>((l1, l2) => l1.Concat(l2)).ToArray();
+				var ls = (from kvp in _instance._dict select kvp.Value).Aggregate<IEnumerable<TValue>>((l1, l2) => l1.Concat(l2)).ToArray();
 				ls.CopyTo(array, arrayIndex);
 			}
 
 			public IEnumerator<TValue> GetEnumerator()
 			{
-				foreach (var kvp in instance.dict)
+				foreach (var kvp in this._instance._dict)
 				{
 					foreach (var v in kvp.Value)
 						yield return v;
@@ -251,7 +245,7 @@ namespace ExtendedSystem
 		{
 			get
 			{
-				return new SingleValueCollection() { instance = this };
+				return new SingleValueCollection() { _instance = this };
 			}
 		}
 
@@ -271,16 +265,15 @@ namespace ExtendedSystem
 
 		public void Add(TKey key, TValue value)
 		{
-			List<TValue> l;
-			if (dict.TryGetValue(key, out l))
+			if (this._dict.TryGetValue(key, out var l))
 				l.Add(value);
 			else
-				dict.Add(key, new List<TValue>() { value });
+				this._dict.Add(key, new List<TValue>() { value });
 		}
 
 		public void Clear()
 		{
-			dict.Clear();
+			this._dict.Clear();
 		}
 
 		public bool Contains(KeyValuePair<TKey, TValue> item)
@@ -290,8 +283,7 @@ namespace ExtendedSystem
 
 		public bool Contains(TKey key, TValue value)
 		{
-			List<TValue> l;
-			if (dict.TryGetValue(key, out l))
+			if (this._dict.TryGetValue(key, out var l))
 				return l.Contains(value);
 			else
 				return false;
@@ -299,18 +291,18 @@ namespace ExtendedSystem
 
 		public bool ContainsKey(TKey key)
 		{
-			return dict.ContainsKey(key);
+			return this._dict.ContainsKey(key);
 		}
 
 		public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
 		{
-			var cnt = dict.Select((kvp) => kvp.Value.Select((v) => new KeyValuePair<TKey, TValue>(kvp.Key, v))).Aggregate((e1, e2) => e1.Concat(e2)).ToArray();
+			var cnt = this._dict.Select((kvp) => kvp.Value.Select((v) => new KeyValuePair<TKey, TValue>(kvp.Key, v))).Aggregate((e1, e2) => e1.Concat(e2)).ToArray();
 			cnt.CopyTo(array, arrayIndex);
 		}
 
 		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 		{
-			foreach (var kvp in dict)
+			foreach (var kvp in this._dict)
 			{
 				foreach (var v in kvp.Value)
 					yield return new KeyValuePair<TKey, TValue>(kvp.Key, v);
@@ -324,8 +316,7 @@ namespace ExtendedSystem
 
 		public bool Remove(TKey key, TValue value)
 		{
-			List<TValue> l;
-			if (dict.TryGetValue(key, out l))
+			if (this._dict.TryGetValue(key, out var l))
 				return l.Remove(value);
 			else
 				return false;
@@ -333,13 +324,12 @@ namespace ExtendedSystem
 
 		public bool Remove(TKey key)
 		{
-			return dict.Remove(key);
+			return this._dict.Remove(key);
 		}
 
 		bool IDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value)
 		{
-			List<TValue> l;
-			if (dict.TryGetValue(key, out l))
+			if (this._dict.TryGetValue(key, out var l))
 			{
 				if (l.Count == 1)
 				{

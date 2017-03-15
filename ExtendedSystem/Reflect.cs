@@ -9,46 +9,46 @@ namespace ExtendedSystem
 {
 	public static class Reflect
 	{
-		internal static readonly Type gtd_ienum = typeof(IEnumerable<>);
-		internal static readonly Type gtd_ilist = typeof(IList<>);
-		internal static readonly Type gtd_icoll = typeof(ICollection<>);
-		internal static readonly Type gtd_null = typeof(Nullable<>);
+		internal static readonly Type _gtd_ienum = typeof(IEnumerable<>);
+		internal static readonly Type _gtd_ilist = typeof(IList<>);
+		internal static readonly Type _gtd_icoll = typeof(ICollection<>);
+		internal static readonly Type _gtd_null = typeof(Nullable<>);
 
 		private class Bound
 		{
-			internal HashSet<Type> lower = new HashSet<Type>();
-			internal HashSet<Type> upper = new HashSet<Type>();
-			internal HashSet<Type> exact = new HashSet<Type>();
+			internal HashSet<Type> _lower = new HashSet<Type>();
+			internal HashSet<Type> _upper = new HashSet<Type>();
+			internal HashSet<Type> _exact = new HashSet<Type>();
 
 			internal Type ComputeSuitableType()
 			{
 				// If exact bounds exist then there is an exact type which must be selected.
-				if (exact.Count > 1)
+				if (this._exact.Count > 1)
 				{
 					// Two different types in the exact bounds - no type can satisfy this.
 					return null;
 				}
-				else if (exact.Count == 1)
+				else if (this._exact.Count == 1)
 				{
-					Type t = exact.Single();
-					return (lower.All((tb) => t.IsAssignableFrom(tb)) && upper.All((tb) => tb.IsAssignableFrom(t))) ? t : null;
+					var t = this._exact.Single();
+					return (this._lower.All((tb) => t.IsAssignableFrom(tb)) && this._upper.All((tb) => tb.IsAssignableFrom(t))) ? t : null;
 				}
 				// No exact bounds, so now check the others.
 				// Upper bounds are the types the target type must be able to convert *to* (i.e. Object is an upper bound of String).
 				// Lower bounds are the types the target type must be able to convert *from* (i.e. String is a lower bound of Object).
-				HashSet<Type> set = new HashSet<Type>();
-				set.UnionWith(lower);
-				set.UnionWith(upper);
-				foreach (var t2 in lower)
+				var set = new HashSet<Type>();
+				set.UnionWith(this._lower);
+				set.UnionWith(this._upper);
+				foreach (var t2 in this._lower)
 					set.RemoveWhere((t) => !t.IsAssignableFrom(t2));
-				foreach (var t2 in upper)
+				foreach (var t2 in this._upper)
 					set.RemoveWhere((t) => !t2.IsAssignableFrom(t));
 				var possibleResult = set.Where((t) => set.All((t2) => t2.IsAssignableFrom(t)));
 				using (var e = possibleResult.GetEnumerator())
 				{
 					if (!e.MoveNext())
 						return null;
-					Type result = e.Current;
+					var result = e.Current;
 					if (e.MoveNext())
 						return null;
 					return result;
@@ -78,7 +78,7 @@ namespace ExtendedSystem
 			int ix;
 			if ((ix = Array.IndexOf(typeParams, parameterType)) >= 0)
 			{
-				bounds[ix].exact.Add(argumentType);
+				bounds[ix]._exact.Add(argumentType);
 				return;
 			}
 			if (parameterType.IsArray && argumentType.IsArray && MultiArray.IsSameRank(parameterType, argumentType))
@@ -116,7 +116,7 @@ namespace ExtendedSystem
 			int ix;
 			if ((ix = Array.IndexOf(typeParams, parameterType)) >= 0)
 			{
-				bounds[ix].upper.Add(argumentType);
+				bounds[ix]._upper.Add(argumentType);
 				return;
 			}
 			if (parameterType.IsArray && argumentType.IsArray && MultiArray.IsSameRank(parameterType, argumentType))
@@ -130,8 +130,8 @@ namespace ExtendedSystem
 			}
 			if (argumentType.IsGenericType)
 			{
-				Type agtd = argumentType.GetGenericTypeDefinition();
-				if (agtd.Equals(gtd_ienum) || agtd.Equals(gtd_icoll) || agtd.Equals(gtd_ilist) && MultiArray.IsSZArray(parameterType))
+				var agtd = argumentType.GetGenericTypeDefinition();
+				if (agtd.Equals(_gtd_ienum) || agtd.Equals(_gtd_icoll) || agtd.Equals(_gtd_ilist) && MultiArray.IsSZArray(parameterType))
 				{
 					if (IsCertainlyReferenceType(argumentType.GetGenericArguments()[0]))
 						UpperInference(argumentType.GetGenericArguments()[0], parameterType.GetElementType(), typeParams, bounds);
@@ -164,7 +164,7 @@ namespace ExtendedSystem
 				}
 				else if (!parameterType.IsInterface)
 				{
-					for (Type bt = parameterType; bt != null; bt = bt.BaseType)
+					for (var bt = parameterType; bt != null; bt = bt.BaseType)
 					{
 						if (bt.GetGenericTypeDefinition().Equals(agtd))
 						{
@@ -193,7 +193,7 @@ namespace ExtendedSystem
 			int ix;
 			if ((ix = Array.IndexOf(typeParams, parameterType)) >= 0)
 			{
-				bounds[ix].lower.Add(argumentType);
+				bounds[ix]._lower.Add(argumentType);
 				return;
 			}
 			if (parameterType.IsArray && argumentType.IsArray && MultiArray.IsSameRank(parameterType, argumentType))
@@ -207,8 +207,8 @@ namespace ExtendedSystem
 			}
 			if (parameterType.IsGenericType)
 			{
-				Type pgtd = parameterType.GetGenericTypeDefinition();
-				if (pgtd.Equals(gtd_ienum) || pgtd.Equals(gtd_icoll) || pgtd.Equals(gtd_ilist) && MultiArray.IsSZArray(argumentType))
+				var pgtd = parameterType.GetGenericTypeDefinition();
+				if (pgtd.Equals(_gtd_ienum) || pgtd.Equals(_gtd_icoll) || pgtd.Equals(_gtd_ilist) && MultiArray.IsSZArray(argumentType))
 				{
 					if (argumentType.GetElementType().IsValueType)
 						ExactInference(argumentType.GetElementType(), parameterType.GetGenericArguments()[0], typeParams, bounds);
@@ -241,7 +241,7 @@ namespace ExtendedSystem
 				}
 				else if (!argumentType.IsInterface)
 				{
-					for (Type bt = argumentType; bt != null; bt = bt.BaseType)
+					for (var bt = argumentType; bt != null; bt = bt.BaseType)
 					{
 						if (bt.GetGenericTypeDefinition().Equals(pgtd))
 						{
@@ -285,18 +285,18 @@ namespace ExtendedSystem
 				throw new ArgumentNullException("argTypes");
 			if (!genericMethod.IsGenericMethodDefinition)
 				return genericMethod;
-			Type[] ptypes = genericMethod.GetParameters().Select((pi) => pi.ParameterType).ToArray();
+			var ptypes = genericMethod.GetParameters().Select((pi) => pi.ParameterType).ToArray();
 			if (ptypes.Length != argTypes.Length)
 				return null;
-			Type[] typeParams = genericMethod.GetGenericArguments();
-			Bound[] bounds = Enumerable.Range(0, argTypes.Length).Select((n) => new Bound()).ToArray();
+			var typeParams = genericMethod.GetGenericArguments();
+			var bounds = Enumerable.Range(0, argTypes.Length).Select((n) => new Bound()).ToArray();
 			// Phase 1
 			for (int i = 0; i < argTypes.Length; ++i)
 			{
 				DeduceArgument(argTypes[i], ptypes[i], typeParams, bounds);
 			}
 			// Phase 2
-			Type[] resultTypes = bounds.Select((b) => b.ComputeSuitableType()).ToArray();
+			var resultTypes = bounds.Select((b) => b.ComputeSuitableType()).ToArray();
 			if (resultTypes.Any((t) => t == null))
 				return null;
 			try
