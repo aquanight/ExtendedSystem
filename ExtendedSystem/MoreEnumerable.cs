@@ -403,6 +403,23 @@ namespace ExtendedSystem
 				collection.Add(i);
 		}
 
+		/// <summary>
+		/// Insert a range of items into a list. Similar to <see cref="List{T}.InsertRange(Int32, IEnumerable{T})"/> but extended to all <see cref="IList{T}"/>.
+		/// </summary>
+		/// <typeparam name="T">The type of element in the list.</typeparam>
+		/// <param name="list">The list to insert items into.</param>
+		/// <param name="index">The index to begin inserting at.</param>
+		/// <param name="range">The range of items to insert.</param>
+		public static void InsertRange<T>(this IList<T> list, int index, IEnumerable<T> range)
+		{
+			if (list == null)
+				throw new ArgumentNullException(nameof(list));
+			if (range == null)
+				throw new ArgumentNullException(nameof(range));
+			foreach (var i in range)
+				list.Insert(index++, i);
+		}
+
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
 		public static IEnumerable<Result<TResult, Exception>> TrySelect<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector)
 		{
