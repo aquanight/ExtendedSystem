@@ -334,21 +334,9 @@ namespace ExtendedSystem
 			}
 		}
 
-		public int Count
-		{
-			get
-			{
-				return this._items.Length - this._freeCount;
-			}
-		}
+		public int Count => this._items.Length - this._freeCount;
 
-		public bool IsReadOnly
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsReadOnly => false;
 
 		internal class LeftCollection : ICollection<TLeft>
 		{
@@ -376,13 +364,7 @@ namespace ExtendedSystem
 				}
 			}
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return !this._useKey || this._instance.IsReadOnly;
-				}
-			}
+			public bool IsReadOnly => !this._useKey || this._instance.IsReadOnly;
 
 			public void Add(TLeft item)
 			{
@@ -458,13 +440,7 @@ namespace ExtendedSystem
 			}
 		}
 
-		public ICollection<TLeft> LeftValues
-		{
-			get
-			{
-				return new LeftCollection { _instance = this, _useKey = false };
-			}
-		}
+		public ICollection<TLeft> LeftValues => new LeftCollection { _instance = this, _useKey = false };
 
 		internal class RightCollection : ICollection<TRight>
 		{
@@ -493,13 +469,7 @@ namespace ExtendedSystem
 				}
 			}
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return !this._useKey || this._instance.IsReadOnly;
-				}
-			}
+			public bool IsReadOnly => !this._useKey || this._instance.IsReadOnly;
 
 			public void Add(TRight item)
 			{
@@ -575,13 +545,7 @@ namespace ExtendedSystem
 			}
 		}
 
-		public ICollection<TRight> RightValues
-		{
-			get
-			{
-				return new RightCollection { _instance = this, _useKey = false };
-			}
-		}
+		public ICollection<TRight> RightValues => new RightCollection { _instance = this, _useKey = false };
 
 		public ICollection<TLeft> this[TRight key]
 		{

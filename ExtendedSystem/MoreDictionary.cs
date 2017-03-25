@@ -48,21 +48,9 @@ namespace ExtendedSystem
 				this._nomod = noModify;
 			}
 
-			public int Count
-			{
-				get
-				{
-					return this._outer._source.Count(this._finder);
-				}
-			}
+			public int Count => this._outer._source.Count(this._finder);
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return this._nomod || this._outer.IsReadOnly;
-				}
-			}
+			public bool IsReadOnly => this._nomod || this._outer.IsReadOnly;
 
 			public void Add(TKey item)
 			{
@@ -173,24 +161,12 @@ namespace ExtendedSystem
 		/// <summary>
 		/// Returns the number of distinct values in this dictionary.
 		/// </summary>
-		public int Count
-		{
-			get
-			{
-				return this._source.Select((kvp) => kvp.Value).Distinct().Count();
-			}
-		}
+		public int Count => this._source.Select((kvp) => kvp.Value).Distinct().Count();
 
 		/// <summary>
 		/// True if this dictionary is readonly, which happens when the originating dictionary is readonly.
 		/// </summary>
-		public bool IsReadOnly
-		{
-			get
-			{
-				return this._source.IsReadOnly;
-			}
-		}
+		public bool IsReadOnly => this._source.IsReadOnly;
 
 		internal class ValueCollection : ICollection<TValue>
 		{
@@ -201,21 +177,9 @@ namespace ExtendedSystem
 				this._outer = otr;
 			}
 
-			public int Count
-			{
-				get
-				{
-					return this._outer.Count;
-				}
-			}
+			public int Count => this._outer.Count;
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public void Add(TValue item)
 			{
@@ -256,13 +220,7 @@ namespace ExtendedSystem
 		/// <summary>
 		/// Returns a readonly collection describing the distinct values in this dictionary.
 		/// </summary>
-		public ICollection<TValue> Keys
-		{
-			get
-			{
-				return new ValueCollection(this);
-			}
-		}
+		public ICollection<TValue> Keys => new ValueCollection(this);
 
 		internal class KeyCollection : ICollection<ICollection<TKey>>
 		{
@@ -273,21 +231,9 @@ namespace ExtendedSystem
 				this._outer = otr;
 			}
 
-			public int Count
-			{
-				get
-				{
-					return this._outer.Count;
-				}
-			}
+			public int Count => this._outer.Count;
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public void Add(ICollection<TKey> item)
 			{
@@ -330,13 +276,7 @@ namespace ExtendedSystem
 		/// Returns a readonly collection of key collections. Each key collection is readonly and corresponds to a value.
 		/// They are returned in the same order as the values in the Keys property.
 		/// </summary>
-		public ICollection<ICollection<TKey>> Values
-		{
-			get
-			{
-				return new KeyCollection(this);
-			}
-		}
+		public ICollection<ICollection<TKey>> Values => new KeyCollection(this);
 
 		/// <summary>
 		/// Adds a collection of keys assigned a value. All of the keys in the originating dictionary are assigned the specified value.
@@ -534,37 +474,13 @@ namespace ExtendedSystem
 				return this._predicate(kvp.Key);
 			}
 
-			public ICollection<TKey> Keys
-			{
-				get
-				{
-					return this._source.Keys.Where(this._predicate).AsCollection();
-				}
-			}
+			public ICollection<TKey> Keys => this._source.Keys.Where(this._predicate).AsCollection();
 
-			public ICollection<TValue> Values
-			{
-				get
-				{
-					return this._source.Keys.Where(this._predicate).Select((k) => this._source[k]).AsCollection();
-				}
-			}
+			public ICollection<TValue> Values => this._source.Keys.Where(this._predicate).Select((k) => this._source[k]).AsCollection();
 
-			public int Count
-			{
-				get
-				{
-					return this._source.Count(this.KeyPredicate);
-				}
-			}
+			public int Count => this._source.Count(this.KeyPredicate);
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return this._source.IsReadOnly;
-				}
-			}
+			public bool IsReadOnly => this._source.IsReadOnly;
 
 			public TValue this[TKey key]
 			{
@@ -663,37 +579,13 @@ namespace ExtendedSystem
 				return this._predicate(kvp.Value);
 			}
 
-			public ICollection<TKey> Keys
-			{
-				get
-				{
-					return this._source.Where(this.ValuePredicate).Select((kvp) => kvp.Key).AsCollection();
-				}
-			}
+			public ICollection<TKey> Keys => this._source.Where(this.ValuePredicate).Select((kvp) => kvp.Key).AsCollection();
 
-			public ICollection<TValue> Values
-			{
-				get
-				{
-					return this._source.Where(this.ValuePredicate).Select((kvp) => kvp.Value).AsCollection();
-				}
-			}
+			public ICollection<TValue> Values => this._source.Where(this.ValuePredicate).Select((kvp) => kvp.Value).AsCollection();
 
-			public int Count
-			{
-				get
-				{
-					return this._source.Count(this.ValuePredicate);
-				}
-			}
+			public int Count => this._source.Count(this.ValuePredicate);
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return this._source.IsReadOnly;
-				}
-			}
+			public bool IsReadOnly => this._source.IsReadOnly;
 
 			public TValue this[TKey key]
 			{
@@ -785,37 +677,13 @@ namespace ExtendedSystem
 			internal IDictionary<TKey, TSource> _source;
 			internal Func<TSource, TResult> _selector;
 
-			public ICollection<TKey> Keys
-			{
-				get
-				{
-					return this._source.Keys;
-				}
-			}
+			public ICollection<TKey> Keys => this._source.Keys;
 
-			public ICollection<TResult> Values
-			{
-				get
-				{
-					return this._source.Values.Select(this._selector).AsCollection();
-				}
-			}
+			public ICollection<TResult> Values => this._source.Values.Select(this._selector).AsCollection();
 
-			public int Count
-			{
-				get
-				{
-					return this._source.Count;
-				}
-			}
+			public int Count => this._source.Count;
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public TResult this[TKey key]
 			{
@@ -921,37 +789,13 @@ namespace ExtendedSystem
 			internal IDictionary<TKey, TInner> _inner;
 			internal Func<TOuter, TInner, TResult> _selector;
 
-			public ICollection<TKey> Keys
-			{
-				get
-				{
-					return this._outer.Keys.Intersect(this._inner.Keys).AsCollection();
-				}
-			}
+			public ICollection<TKey> Keys => this._outer.Keys.Intersect(this._inner.Keys).AsCollection();
 
-			public ICollection<TResult> Values
-			{
-				get
-				{
-					return this.Keys.Select((k) => this._selector(this._outer[k], this._inner[k])).AsCollection();
-				}
-			}
+			public ICollection<TResult> Values => this.Keys.Select((k) => this._selector(this._outer[k], this._inner[k])).AsCollection();
 
-			public int Count
-			{
-				get
-				{
-					return this.Keys.Count;
-				}
-			}
+			public int Count => this.Keys.Count;
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public TResult this[TKey key]
 			{

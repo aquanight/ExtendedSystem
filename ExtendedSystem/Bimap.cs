@@ -645,41 +645,17 @@ namespace ExtendedSystem
 			}
 		}
 
-		public int Count
-		{
-			get
-			{
-				return this._items.Length - this._freeCount;
-			}
-		}
+		public int Count => this._items.Length - this._freeCount;
 
-		public bool IsReadOnly
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsReadOnly => false;
 
 		internal class LeftCollection : ICollection<TLeft>
 		{
 			internal Bimap<TLeft, TRight> _instance;
 
-			public int Count
-			{
-				get
-				{
-					return this._instance.Count;
-				}
-			}
+			public int Count => this._instance.Count;
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public void Add(TLeft item)
 			{
@@ -727,33 +703,15 @@ namespace ExtendedSystem
 			}
 		}
 
-		public ICollection<TLeft> LeftValues
-		{
-			get
-			{
-				return new LeftCollection { _instance = this };
-			}
-		}
+		public ICollection<TLeft> LeftValues => new LeftCollection { _instance = this };
 
 		internal class RightCollection : ICollection<TRight>
 		{
 			internal Bimap<TLeft, TRight> _instance;
 
-			public int Count
-			{
-				get
-				{
-					return this._instance.Count;
-				}
-			}
+			public int Count => this._instance.Count;
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public void Add(TRight item)
 			{
@@ -801,13 +759,7 @@ namespace ExtendedSystem
 			}
 		}
 
-		public ICollection<TRight> RightValues
-		{
-			get
-			{
-				return new RightCollection { _instance = this };
-			}
-		}
+		public ICollection<TRight> RightValues => new RightCollection { _instance = this };
 
 		public void Add(KeyPair<TLeft, TRight> item)
 		{
@@ -1009,13 +961,7 @@ namespace ExtendedSystem
 			}
 		}
 
-		public float LoadFactor
-		{
-			get
-			{
-				return this.Count / (float)this._lefthash.Length;
-			}
-		}
+		public float LoadFactor => this.Count / (float)this._lefthash.Length;
 
 		/*
 		public Bimap<TRight, TLeft> Invert()

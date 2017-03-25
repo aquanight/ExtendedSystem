@@ -29,7 +29,7 @@ namespace ExtendedSystem
 		{
 			if (fieldInfo == null)
 				throw new ArgumentNullException(nameof(fieldInfo));
-			TypedReference tr = __makeref(instance);
+			var tr = __makeref(instance);
 			object val = fieldInfo.GetValueDirect(tr);
 			return (T)val;
 		}

@@ -11,21 +11,9 @@ namespace ExtendedSystem
 		{
 			internal IEnumerable<T> _wrapped;
 
-			public int Count
-			{
-				get
-				{
-					return this._wrapped.Count();
-				}
-			}
+			public int Count => this._wrapped.Count();
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public void Add(T item)
 			{

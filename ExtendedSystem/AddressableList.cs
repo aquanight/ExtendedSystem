@@ -223,13 +223,7 @@ namespace ExtendedSystem
 			private set;
 		}
 
-		public bool IsReadOnly
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsReadOnly => false;
 
 		public void Add(T item)
 		{

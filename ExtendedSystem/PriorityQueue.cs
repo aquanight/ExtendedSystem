@@ -32,24 +32,12 @@ namespace ExtendedSystem
 		/// <summary>
 		/// Gets the number of items in the priority queue.
 		/// </summary>
-		public int Count
-		{
-			get
-			{
-				return this._entries.Count;
-			}
-		}
+		public int Count => this._entries.Count;
 
 		/// <summary>
 		/// Gets a value indicating if this queue is read-only. As such, it always returns false.
 		/// </summary>
-		public bool IsReadOnly
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsReadOnly => false;
 
 		/// <summary>
 		/// Creates a new empty priority queue with the default comparer.

@@ -99,35 +99,17 @@ namespace ExtendedSystem
 			}
 		}
 
-		object IEnumerator.Current
-		{
-			get
-			{
-				return this.Current;
-			}
-		}
+		object IEnumerator.Current => this.Current;
 
 		/// <summary>
 		/// Returns the number of items in the list at and ahead of the current position. *NOT THE TOTAL NUMBER OF ITEMS IN THE LIST.*
 		/// </summary>
-		public int Count
-		{
-			get
-			{
-				return this.Target.Count - this._position;
-			}
-		}
+		public int Count => this.Target.Count - this._position;
 
 		/// <summary>
 		/// True if the enumerated list is read-only and false otherwise.
 		/// </summary>
-		public bool IsReadOnly
-		{
-			get
-			{
-				return this.Target.IsReadOnly;
-			}
-		}
+		public bool IsReadOnly => this.Target.IsReadOnly;
 
 		/// <summary>
 		/// Provides random-access to the target list: the list is indexed relative to the current position.

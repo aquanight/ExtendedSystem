@@ -16,13 +16,7 @@ namespace ExtendedSystem
 		/// <summary>
 		/// Returns the IEqualityComparer employed in the graph, which dictates equatablity of the vertices, and hashing.
 		/// </summary>
-		public IEqualityComparer<T> Comparer
-		{
-			get
-			{
-				return this._graph.Comparer;
-			}
-		}
+		public IEqualityComparer<T> Comparer => this._graph.Comparer;
 
 		/// <summary>
 		/// Creates a new empty graph with the default IEqualityComparer.
@@ -75,35 +69,17 @@ namespace ExtendedSystem
 		/// <summary>
 		/// Returns the number of vertices in the graph.
 		/// </summary>
-		public int Count
-		{
-			get
-			{
-				return this._graph.Count;
-			}
-		}
+		public int Count => this._graph.Count;
 
 		/// <summary>
 		/// Returns the number of edges in the graph.
 		/// </summary>
-		public int EdgeCount
-		{
-			get
-			{
-				return this._graph.Sum((kvp) => kvp.Value.Count);
-			}
-		}
+		public int EdgeCount => this._graph.Sum((kvp) => kvp.Value.Count);
 
 		/// <summary>
 		/// Determines if this graph is read-only. As such it always returns false.
 		/// </summary>
-		bool ICollection<T>.IsReadOnly
-		{
-			get
-			{
-				return false;
-			}
-		}
+		bool ICollection<T>.IsReadOnly => false;
 
 		/// <summary>
 		/// Adds the specified vertex to the graph.

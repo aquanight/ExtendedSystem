@@ -65,13 +65,7 @@ namespace ExtendedSystem
 				}
 			}
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return this._instance.IsReadOnly;
-				}
-			}
+			public bool IsReadOnly => this._instance.IsReadOnly;
 
 			public void Add(TValue item)
 			{
@@ -156,49 +150,19 @@ namespace ExtendedSystem
 			}
 		}
 
-		public int Count
-		{
-			get
-			{
-				return this._dict.Count;
-			}
-		}
+		public int Count => this._dict.Count;
 
-		public bool IsReadOnly
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsReadOnly => false;
 
-		public ICollection<TKey> Keys
-		{
-			get
-			{
-				return this._dict.Keys;
-			}
-		}
+		public ICollection<TKey> Keys => this._dict.Keys;
 
 		internal class SingleValueCollection : ICollection<TValue>
 		{
 			internal Multimap<TKey, TValue> _instance;
 
-			public int Count
-			{
-				get
-				{
-					return (from kvp in _instance._dict select kvp.Value.Count).Sum();
-				}
-			}
+			public int Count => (from kvp in _instance._dict select kvp.Value.Count).Sum();
 
-			public bool IsReadOnly
-			{
-				get
-				{
-					return true;
-				}
-			}
+			public bool IsReadOnly => true;
 
 			public void Add(TValue item)
 			{
@@ -241,13 +205,7 @@ namespace ExtendedSystem
 			}
 		}
 
-		ICollection<TValue> IDictionary<TKey, TValue>.Values
-		{
-			get
-			{
-				return new SingleValueCollection() { _instance = this };
-			}
-		}
+		ICollection<TValue> IDictionary<TKey, TValue>.Values => new SingleValueCollection() { _instance = this };
 
 		public void Add(KeyValuePair<TKey, TValue> item)
 		{
