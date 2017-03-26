@@ -61,6 +61,7 @@
     <Compile Include="PriorityQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflect.cs" />
+    <Compile Include="ReflectEmit.cs" />
     <Compile Include="Result.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
