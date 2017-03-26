@@ -56,6 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultTests.cs" />
     <Compile Include="ListTests.cs" />
+    <Compile Include="ReflectEmitTests.cs" />
     <Compile Include="UtilityTests.cs" />
   </ItemGroup>
   <ItemGroup>
