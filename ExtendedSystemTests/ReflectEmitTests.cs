@@ -28,7 +28,7 @@ namespace ExtendedSystemTests
 			var tt = tbld.CreateType();
 			var mthd = tt.GetMethod("TestMethod");
 			var dlg = mthd.CreateDelegate<Func<ConsoleColor>>();
-			ConsoleColor clr = dlg();
+			var clr = dlg();
 			Assert.AreEqual(ConsoleColor.Blue, clr);
 			var body = mthd.GetMethodBody();
 			var il = body.GetILAsByteArray();

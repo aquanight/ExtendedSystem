@@ -298,8 +298,10 @@ namespace ExtendedSystem
 		{
 			if (converter == null)
 				throw new ArgumentNullException(nameof(converter));
-			var output = new AddressableList<TOutput>(this.Capacity);
-			output.Count = this.Count;
+			var output = new AddressableList<TOutput>(this.Capacity)
+			{
+				Count = this.Count
+			};
 			for (int i = 0; i < this.Count; ++i)
 				output._data[i] = converter(this._data[i]);
 			return output;

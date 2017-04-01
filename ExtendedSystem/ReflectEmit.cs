@@ -41,7 +41,7 @@ namespace ExtendedSystem
 				}
 				else if (rawval is bool || rawval is byte || rawval is sbyte || rawval is char || rawval is short || rawval is ushort || rawval is int)
 				{
-					int iv = Convert.ToInt32(rawval);
+					int iv = Convert.ToInt32(rawval, System.Globalization.CultureInfo.InvariantCulture);
 					generator.Emit(OpCodes.Ldc_I4, iv);
 				}
 				else if (rawval is uint uv)

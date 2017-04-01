@@ -46,8 +46,10 @@ namespace ExtendedSystem
 
 		internal static Result<TValue, TException> FromException(TException e)
 		{
-			var r = new Result<TValue, TException>();
-			r._exception = e;
+			var r = new Result<TValue, TException>()
+			{
+				_exception = e
+			};
 			return r;
 		}
 
