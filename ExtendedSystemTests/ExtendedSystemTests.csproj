@@ -57,6 +57,7 @@
     <Compile Include="ResultTests.cs" />
     <Compile Include="ListTests.cs" />
     <Compile Include="ReflectEmitTests.cs" />
+    <Compile Include="ReflectTest.cs" />
     <Compile Include="UtilityTests.cs" />
   </ItemGroup>
   <ItemGroup>

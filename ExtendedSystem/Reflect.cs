@@ -9,6 +9,65 @@ namespace ExtendedSystem
 {
 	public static class Reflect
 	{
+
+		/// <summary>
+		/// Finds the method in a type that overrides a particular base class's virtual method.
+		/// </summary>
+		/// <param name="baseMethod">The base method to search for an override.</param>
+		/// <param name="targetType">The type to find the overriding method in.</param>
+		/// <returns>The method that overrides <paramref name="baseMethod"/> in <paramref name="targetType"/>.</returns>
+		/// <exception cref="ArgumentNullException"><paramref name="baseMethod"/> or <paramref name="targetType"/> is null</exception>
+		/// <exception cref="ArgumentException"><paramref name="targetType"/> is not a class or value type (that is, it is an interface).</exception>
+		/// <exception cref="ArgumentException"><paramref name="targetType"/> does not implement the interface or extend the base class that declares <paramref name="baseMethod"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="baseMethod"/> is a method of a generic interface, such as <see cref="IList{T}"/>, and <paramref name="targetType"/> is an array type</exception>
+		/// <remarks>
+		/// This method returns the actual method that would be called by a virtual method invocation performed on the base method against an object of the specified target type.
+		/// If <paramref name="baseMethod"/> is declared by an interface, the final overriding method in <paramref name="targetType"/> implementing the interface method is retrieved.
+		/// (If the base class implements the interface method, and the target type overrides the interface implementation, the override is returned.)
+		/// If <paramref name="baseMethod"/> is a virtual method declared by a base class, the method in <paramref name="targetType"/> which overrides it is retrieved.
+		/// If no method overrides <paramref name="baseMethod"/> in <paramref name="targetType"/>, including if <paramref name="baseMethod"/> is not virtual, then <paramref name="baseMethod"/> is returned unchanged.
+		/// <paramref name="targetType"/> cannot be an interface, because interfaces don't override methods.
+		/// </remarks>
+		public static MethodInfo GetOverridingMethod(this MethodInfo baseMethod, Type targetType)
+		{
+			if (baseMethod == null)
+				throw new ArgumentNullException(nameof(baseMethod));
+			if (targetType == null)
+				throw new ArgumentNullException(nameof(targetType));
+			if (targetType.IsInterface)
+				throw new ArgumentException("The target type is an interface and won't override any methods.");
+			var dc = baseMethod.DeclaringType;
+			if (dc.IsInterface)
+			{
+				if (dc.IsGenericType && targetType.IsArray)
+					throw new ArgumentException("Methods of generic interfaces cannot be resolved for array types");
+				// Search for a method implementing the interface.
+				var map = targetType.GetInterfaceMap(dc);
+				int ix = Array.FindIndex(map.InterfaceMethods, (m) => m.MethodHandle == baseMethod.MethodHandle);
+				if (ix < 0)
+					throw new InvalidOperationException("Something's gone wrong!");
+				var result = map.TargetMethods[ix];
+				System.Diagnostics.Debug.Assert(!result.DeclaringType.IsInterface);
+				// TargetMethod may possibly only find a base class definition: re-enter the search to go up to the derived class method.
+				return GetOverridingMethod(result, targetType);
+			}
+			else
+			{
+				// Fast result for non-virtual methods:
+				if (!baseMethod.IsVirtual)
+					return baseMethod;
+				baseMethod = baseMethod.GetBaseDefinition();
+				var tmthd = targetType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				for (int mi = 0; mi < tmthd.Length; ++mi)
+				{
+					var tbase = tmthd[mi].GetBaseDefinition();
+					if (tbase.MethodHandle == baseMethod.MethodHandle)
+						return tmthd[mi];
+				}
+				return baseMethod;
+			}
+		}
+
 		public static T GetValue<T>(this FieldInfo fieldInfo)
 		{
 			if (fieldInfo == null)
