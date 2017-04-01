@@ -9,6 +9,32 @@ namespace ExtendedSystem
 {
 	public static class Reflect
 	{
+		/// <summary>
+		/// Test if a given member is marked to be CLS Compliant.
+		/// </summary>
+		/// <param name="member"></param>
+		/// <returns></returns>
+		public static bool IsCLSCompliant(this MemberInfo member)
+		{
+			if (member == null)
+				throw new ArgumentNullException(nameof(member));
+			var attrib = member.GetCustomAttribute<CLSCompliantAttribute>();
+			if (attrib == null)
+			{
+				var dt = member.DeclaringType;
+				if (dt != null)
+					return IsCLSCompliant(dt);
+				else if (member is Type t)
+				{
+					attrib = t.Assembly.GetCustomAttribute<CLSCompliantAttribute>();
+					return attrib?.IsCompliant ?? false;
+				}
+				else
+					return false;
+			}
+			else
+				return attrib.IsCompliant;
+		}
 
 		/// <summary>
 		/// Finds the method in a type that overrides a particular base class's virtual method.
@@ -60,7 +86,8 @@ namespace ExtendedSystem
 				if (!baseMethod.IsVirtual)
 					return baseMethod;
 				baseMethod = baseMethod.GetBaseDefinition();
-				var tmthd = targetType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				// Avoid an unneeded RestrictedMemberAccess demand if the source method is public, as the overriding method would be required to be as well.
+				var tmthd = targetType.GetMethods(BindingFlags.Public | (baseMethod.IsPublic ? 0 : BindingFlags.NonPublic) | BindingFlags.Instance);
 				for (int mi = 0; mi < tmthd.Length; ++mi)
 				{
 					var tbase = tmthd[mi].GetBaseDefinition();
