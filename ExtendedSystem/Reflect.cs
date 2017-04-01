@@ -53,6 +53,9 @@ namespace ExtendedSystem
 			}
 			else
 			{
+				// Verify the base class
+				if (!dc.IsAssignableFrom(targetType))
+					throw new ArgumentException("Target type doesn't derive the method's type");
 				// Fast result for non-virtual methods:
 				if (!baseMethod.IsVirtual)
 					return baseMethod;
