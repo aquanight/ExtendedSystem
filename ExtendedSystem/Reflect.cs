@@ -123,6 +123,12 @@ namespace ExtendedSystem
 			return (T)val;
 		}
 
+		/// <summary>
+		/// Create a delegate from the specific method info with a delegate type specified at compile-time.
+		/// </summary>
+		/// <typeparam name="T">The type of the delegate to create. This type must be delegate type.</typeparam>
+		/// <param name="methodInfo">The method to create a delegate for.</param>
+		/// <returns>The created delegate.</returns>
 		public static T CreateDelegate<T>(this MethodInfo methodInfo)
 		{
 			if (methodInfo == null)

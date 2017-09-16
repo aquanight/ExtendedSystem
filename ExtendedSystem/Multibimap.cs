@@ -128,6 +128,7 @@ namespace ExtendedSystem
 			}
 		}
 
+		// Find the internal index of the first slot with matching key.
 		private int FindLeft(TLeft key)
 		{
 			int hsh = this._leftcmp.GetHashCode(key);
@@ -143,6 +144,8 @@ namespace ExtendedSystem
 			return -1;
 		}
 
+		// Find the next slot with a matching key starting from the specified index. Needed because in a chain of items with the same hash it is possible to have different items
+		// if there are hash collisions.
 		private int FindLeftNext(int ix)
 		{
 			int s;
