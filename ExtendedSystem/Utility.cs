@@ -259,19 +259,30 @@ namespace ExtendedSystem
 			}
 		}
 
+		public static Task<T> AsTask<T, TException>(this IResult<T, TException> result) where TException : Exception
+		{
+			if (result == null)
+				throw new ArgumentNullException(nameof(result));
+			var tcs = new TaskCompletionSource<T>();
+			if (result.Success)
+				tcs.SetResult(result.Assert());
+			else
+				tcs.SetException(result.GetException());
+			return tcs.Task;
+		}
+
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
-		public static async Task<Result<T, Exception>> AsResultAsync<T>(this Task<T> task)
+		public static Task<Result<T, AggregateException>> AsResultAsync<T>(this Task<T> task)
 		{
 			if (task == null)
 				throw new ArgumentNullException("task");
-			try
+			return task.ContinueWith((t) =>
 			{
-				return await task;
-			}
-			catch (Exception e)
-			{
-				return Result<T, Exception>.FromException(e);
-			}
+				if (t.IsCompleted)
+					return t.Result;
+				else
+					return Result<T, AggregateException>.FromException(t.Exception);
+			}, TaskContinuationOptions.NotOnCanceled);
 		}
 
 		public static long SplitTicks(this System.Diagnostics.Stopwatch stopwatch)
@@ -304,6 +315,24 @@ namespace ExtendedSystem
 			return et;
 		}
 
+		private class NotNullableTest<T> where T : struct // struct constraint rejects both ref types and Nullable<T>
+		{
+		}
+
+		public static bool IsNullable(this Type t)
+		{
+			if (t == null) throw new ArgumentNullException(nameof(t));
+			try
+			{
+				Type test = typeof(NotNullableTest<>).MakeGenericType(t);
+				return true;
+			}
+			catch (ArgumentException) //thrown by MakeGenericType when the type doesn't satisfy the constraint
+			{
+				return false;
+			}
+		}
+
 		/// <summary>
 		/// Extract the components of the indicated value: the mantissa, exponent, and sign.
 		/// Since the mantissa is 53 bits, a long value is required to represent it.
@@ -316,7 +345,7 @@ namespace ExtendedSystem
 		/// - the expression ((double)mantissa * Math.Pow(2, exponent) * (negative ? -1.0 : 1.0) == value) is true.
 		/// </summary>
 		/// <param name="value"></param>
-		public static void ExtractComponents(double value, out long mantissa, out int exponent, out bool negative)
+		public static void ExtractComponents(this double value, out long mantissa, out int exponent, out bool negative)
 		{
 			long bits = BitConverter.DoubleToInt64Bits(value);
 			mantissa = (bits & 0x000FFFFFFFFFFFFFL);
