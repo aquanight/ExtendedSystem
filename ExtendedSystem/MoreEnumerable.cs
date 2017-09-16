@@ -441,5 +441,62 @@ namespace ExtendedSystem
 			}
 			return source.Select((r) => r.Assert());
 		}
+
+		private abstract class TypedRefCopyHelp
+		{
+			protected abstract void CopyHelpImpl(object value, TypedReference target);
+
+			private static Dictionary<Type, TypedRefCopyHelp> _helpers = new Dictionary<Type, TypedRefCopyHelp>();
+
+			public static void CopyToTypeRef(object value, TypedReference target)
+			{
+				TypedRefCopyHelp helper;
+				var tgt = __reftype(target);
+				if (!_helpers.TryGetValue(tgt, out helper))
+				{
+					var helpertype = typeof(TypedRefCopyHelp<>).MakeGenericType(tgt);
+					helper = (TypedRefCopyHelp)Activator.CreateInstance(helpertype);
+					_helpers[tgt] = helper;
+				}
+				helper.CopyHelpImpl(value, target);
+			}
+		}
+
+		private sealed class TypedRefCopyHelp<T> : TypedRefCopyHelp
+		{
+			protected override void CopyHelpImpl(object value, TypedReference target)
+			{
+				// Reject null value only if the target type is non-nullable value type.
+				if (!typeof(T).IsNullable() && value == null)
+					throw new ArgumentNullException(nameof(value));
+				ref T loc = ref __refvalue(target, T);
+				loc = (T)value;
+			}
+		}
+
+		[CLSCompliant(false)]
+		public static void Deconstruct(this Array array, __arglist)
+		{
+			if (array == null)
+				throw new ArgumentNullException(nameof(array));
+			var argit = new ArgIterator(__arglist);
+			var et = array.GetType().GetElementType();
+			try
+			{
+				if (argit.GetRemainingCount() > array.Length)
+					throw new ArgumentException("Array does not have sufficient elements", nameof(array));
+				var e = array.GetEnumerator(); // Don't much like using the IEnumerable interface to Array but this way I don't have to deal with ranks.
+				while (argit.GetRemainingCount() > 0)
+				{
+					e.MoveNext();
+					var tr = argit.GetNextArg();
+					TypedRefCopyHelp.CopyToTypeRef(e.Current, tr);
+				}
+			}
+			finally
+			{
+				argit.End();
+			}
+		}
 	}
 }
