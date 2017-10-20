@@ -59,6 +59,7 @@
     <Compile Include="ReflectEmitTests.cs" />
     <Compile Include="ReflectTest.cs" />
     <Compile Include="EnumerableTest.cs" />
+    <Compile Include="FieldDelegateTests.cs" />
     <Compile Include="UtilityTests.cs" />
   </ItemGroup>
   <ItemGroup>

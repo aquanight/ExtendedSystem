@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="Project Rules" Description="Rules for this project" ToolsVersion="14.0">
+<RuleSet Name="Project Rules" Description="Rules for this project" ToolsVersion="15.0">
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1000" Action="Error" />
     <Rule Id="CA1001" Action="Warning" />
@@ -103,7 +103,7 @@
     <Rule Id="CA1708" Action="Error" />
     <Rule Id="CA1709" Action="Info" />
     <Rule Id="CA1710" Action="Warning" />
-    <Rule Id="CA1711" Action="Error" />
+    <Rule Id="CA1711" Action="Warning" />
     <Rule Id="CA1712" Action="Error" />
     <Rule Id="CA1713" Action="Error" />
     <Rule Id="CA1714" Action="Error" />
@@ -123,7 +123,7 @@
     <Rule Id="CA1804" Action="Warning" />
     <Rule Id="CA1806" Action="Warning" />
     <Rule Id="CA1809" Action="Warning" />
-    <Rule Id="CA1810" Action="Error" />
+    <Rule Id="CA1810" Action="Warning" />
     <Rule Id="CA1811" Action="Warning" />
     <Rule Id="CA1812" Action="Warning" />
     <Rule Id="CA1813" Action="Error" />

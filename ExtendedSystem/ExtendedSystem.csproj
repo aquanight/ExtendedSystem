@@ -49,6 +49,8 @@
   <ItemGroup>
     <Compile Include="AddressableList.cs" />
     <Compile Include="Bimap.cs" />
+    <Compile Include="DynamicAssist.cs" />
+    <Compile Include="FieldDelegate.cs" />
     <Compile Include="GenericBinder.cs" />
     <Compile Include="Graph.cs" />
     <Compile Include="MoreDictionary.cs" />
