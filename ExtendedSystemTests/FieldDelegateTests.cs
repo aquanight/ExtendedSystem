@@ -92,7 +92,7 @@ namespace ExtendedSystemTests
 
 		private object _place;
 
-		[TestMethod][ExpectedException(typeof(InvalidCastException))]
+		[TestMethod][ExpectedException(typeof(ArgumentException))]
 		public void TestBadGetValue()
 		{
 			var ts2 = new TestStruct2();

@@ -15,6 +15,7 @@ namespace ExtendedSystem
 
 		private static AssemblyName _dynamicName;
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
 		static DynamicAssist()
 		{
 			_dynamicName = new AssemblyName("dynamic");
