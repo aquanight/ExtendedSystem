@@ -30,6 +30,13 @@ namespace ExtendedSystem
 				return null;
 		}
 
+		public static TDelegate Rebind<TDelegate>(this Delegate @delegate) where TDelegate : class
+		{
+			if (!typeof(Delegate).IsAssignableFrom(typeof(TDelegate))) throw new ArgumentException(nameof(TDelegate));
+			if (@delegate == null) return null;
+			return (TDelegate)(object)Delegate.CreateDelegate(typeof(TDelegate), @delegate.Target, @delegate.Method);
+		}
+
 		public static Action BindFirst<T>(this Action<T> action, T first)
 		{
 			return () => action(first);

@@ -24,5 +24,19 @@ namespace ExtendedSystem.Tests
 			var n2 = r2.AsNullable();
 			Assert.IsFalse(n2.HasValue);
 		}
+
+		private void RebindTargetMethod(IAsyncResult asyncResult)
+		{
+		}
+
+		[TestMethod()]
+		public void RebindTest()
+		{
+			AsyncCallback cb = this.RebindTargetMethod;
+			Action<IAsyncResult> cb2 = cb.Rebind<Action<IAsyncResult>>();
+
+			Assert.AreEqual(cb.Target, cb2.Target);
+			Assert.AreEqual(cb.Method, cb2.Method);
+		}
 	}
 }

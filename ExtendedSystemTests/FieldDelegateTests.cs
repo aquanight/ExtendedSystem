@@ -42,8 +42,8 @@ namespace ExtendedSystemTests
 		[TestMethod]
 		public void TestGetValue()
 		{
-			TypedReference tr_a = __makeref(a);
-			TypedReference tr_b = __makeref(b);
+			TypedReference tr_a = __makeref(this.a);
+			TypedReference tr_b = __makeref(this.b);
 
 			Assert.AreEqual(42, this.ts_x.GetValue(tr_a));
 			Assert.AreEqual(84.0, this.ts_y.GetValue(tr_a));
@@ -54,8 +54,8 @@ namespace ExtendedSystemTests
 		[TestMethod]
 		public void TestSetValue()
 		{
-			TypedReference tr_a = __makeref(a);
-			TypedReference tr_b = __makeref(b);
+			TypedReference tr_a = __makeref(this.a);
+			TypedReference tr_b = __makeref(this.b);
 
 			const int new_x = 97;
 			const double new_y = 34.0;

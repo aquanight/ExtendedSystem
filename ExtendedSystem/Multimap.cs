@@ -160,7 +160,7 @@ namespace ExtendedSystem
 		{
 			internal Multimap<TKey, TValue> _instance;
 
-			public int Count => (from kvp in _instance._dict select kvp.Value.Count).Sum();
+			public int Count => (from kvp in this._instance._dict select kvp.Value.Count).Sum();
 
 			public bool IsReadOnly => true;
 
@@ -181,7 +181,7 @@ namespace ExtendedSystem
 
 			public void CopyTo(TValue[] array, int arrayIndex)
 			{
-				var ls = (from kvp in _instance._dict select kvp.Value).Aggregate<IEnumerable<TValue>>((l1, l2) => l1.Concat(l2)).ToArray();
+				var ls = (from kvp in this._instance._dict select kvp.Value).Aggregate<IEnumerable<TValue>>((l1, l2) => l1.Concat(l2)).ToArray();
 				ls.CopyTo(array, arrayIndex);
 			}
 
